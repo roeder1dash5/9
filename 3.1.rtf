@@ -1,0 +1,797 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2821
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww19920\viewh15540\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 #import "ViewController.h" // Assumes ViewController.h defines CalibrationState enum\
+#import <AVFoundation/AVFoundation.h>\
+#import <Vision/Vision.h>\
+#import <CoreMotion/CoreMotion.h>\
+// #import <CoreMedia/CoreMedia.h> // Not explicitly used in this version, can be removed if not needed elsewhere\
+\
+// Define CalibrationState if it's not in the .h file (Best practice: Define in .h)\
+typedef NS_ENUM(NSInteger, CalibrationState) \{\
+    CalibrationStateIdle,\
+    CalibrationStateLookingUp,\
+    CalibrationStateLookingStraight,\
+    CalibrationStateLookingDown,\
+    CalibrationStateCalibrated\
+\};\
+\
+\
+@interface ViewController () <AVCaptureVideoDataOutputSampleBufferDelegate>\
+// AVFoundation Properties\
+@property (nonatomic, strong) AVCaptureSession           *session;\
+@property (nonatomic, strong) AVCaptureVideoPreviewLayer *previewLayer;\
+@property (nonatomic, strong) AVCaptureVideoDataOutput   *videoDataOutput;\
+\
+// CoreMotion Properties\
+@property (nonatomic, strong) CMMotionManager            *motionManager;\
+\
+// Vision Properties\
+@property (nonatomic, strong) VNDetectHorizonRequest     *horizonRequest;\
+@property (nonatomic, strong) dispatch_queue_t           visionQueue; // Serial queue for Vision processing\
+\
+// UI Elements\
+@property (nonatomic, strong) UIVisualEffectView         *floorBlurView;\
+@property (nonatomic, strong) UIVisualEffectView         *centralCircleBlurView;\
+@property (nonatomic, assign) CGRect                     defaultBottomBlurFrame;\
+@property (nonatomic, strong) UIButton                   *calibrationButton;\
+@property (nonatomic, strong) UILabel                    *statusLabel;\
+@property (nonatomic, strong) UIView                     *loadingView; // Loading overlay\
+\
+// State & Calibration Properties\
+@property (nonatomic, assign) CalibrationState           calibrationState;\
+@property (nonatomic, assign) BOOL                       isOrientationValid;\
+@property (nonatomic, strong, nullable) NSNumber         *referencePitchUp;\
+@property (nonatomic, strong, nullable) NSNumber         *referencePitchDown;\
+@property (nonatomic, strong, nullable) NSNumber         *floorPitchOffset;\
+@property (nonatomic, strong, nullable) NSNumber         *floorWallIntersectionY; // Stores detected Y coordinate\
+@end\
+\
+@implementation ViewController\
+\
+#pragma mark - Lifecycle\
+\
+- (void)viewDidLoad \{\
+    [super viewDidLoad];\
+    NSLog(@"viewDidLoad: Starting setup."); // Log start\
+\
+    // Show a simple loading screen during initialization\
+    self.loadingView = [[UIView alloc] initWithFrame:self.view.bounds];\
+    self.loadingView.backgroundColor = [UIColor blackColor]; // Opaque black background\
+    self.loadingView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight; // Ensure it resizes\
+    UIActivityIndicatorView *indicator = [[UIActivityIndicatorView alloc]\
+                                           initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleLarge];\
+    indicator.color = [UIColor whiteColor]; // Make indicator visible on black background\
+    indicator.center = CGPointMake(self.loadingView.bounds.size.width / 2.0, self.loadingView.bounds.size.height / 2.0); // Center indicator\
+    indicator.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin; // Keep centered on resize\
+    [indicator startAnimating];\
+    [self.loadingView addSubview:indicator];\
+    [self.view addSubview:self.loadingView];\
+    NSLog(@"viewDidLoad: Loading view added.");\
+\
+    // Initialize properties\
+    self.motionManager = [[CMMotionManager alloc] init];\
+    // Ensure visionQueue is initialized (serial is usually best for Vision sequences)\
+    self.visionQueue = dispatch_queue_create("com.example.visionQueue", DISPATCH_QUEUE_SERIAL);\
+    self.calibrationButton = [UIButton buttonWithType:UIButtonTypeSystem];\
+    self.calibrationState = CalibrationStateIdle; // Use enum from .h if defined there\
+    self.isOrientationValid = NO;\
+    NSLog(@"viewDidLoad: Properties initialized.");\
+\
+    // Call setup methods\
+    [self setupVision];\
+    [self setupCamera];\
+    [self setupUI];\
+    [self startMotionUpdates];\
+    NSLog(@"viewDidLoad: Setup methods called.");\
+\
+    // Remove the loading view after a short delay\
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)),\
+                   dispatch_get_main_queue(), ^\{\
+        // --- Added Log ---\
+        NSLog(@"Dispatch_after: Removing loadingView.");\
+        [self.loadingView removeFromSuperview];\
+        self.loadingView = nil; // Release the loading view object\
+    \});\
+\
+    // --- Added Log ---\
+    NSLog(@"Finished viewDidLoad");\
+\}\
+\
+- (void)viewDidLayoutSubviews \{\
+    [super viewDidLayoutSubviews];\
+    // Update layer frames on layout change (e.g., rotation)\
+    // Add nil checks for safety\
+    if (self.previewLayer) \{\
+        self.previewLayer.frame = self.view.bounds;\
+    \}\
+    if (self.floorBlurView) \{\
+        // Recalculate frame based on current bounds/detection\
+        self.floorBlurView.frame = [self calculateFloorBlurFrame];\
+        // Update mask frame after view frame changes\
+        [self updateGradientMaskFrameForView:self.floorBlurView];\
+    \}\
+    if (self.centralCircleBlurView) \{\
+        self.centralCircleBlurView.center = self.view.center;\
+        // Update mask frame after view frame changes (center change doesn't affect bounds here, but good practice)\
+        [self updateCircleMaskFrameForView:self.centralCircleBlurView];\
+    \}\
+    // Update frames for elements positioned relative to bounds/safe area\
+    if (self.calibrationButton) \{\
+        self.calibrationButton.frame = CGRectMake(20, self.view.bounds.size.height - 80, self.view.bounds.size.width - 40, 50);\
+    \}\
+    if (self.statusLabel) \{\
+        self.statusLabel.frame = CGRectMake(20, self.view.safeAreaInsets.top + 20, self.view.bounds.size.width - 40, 30);\
+    \}\
+    // Update loading view frame if it's still present (though unlikely after viewDidLoad)\
+    if (self.loadingView) \{\
+         self.loadingView.frame = self.view.bounds;\
+         // Recenter indicator if needed\
+         for (UIView *subview in self.loadingView.subviews) \{\
+             if ([subview isKindOfClass:[UIActivityIndicatorView class]]) \{\
+                 subview.center = CGPointMake(self.loadingView.bounds.size.width / 2.0, self.loadingView.bounds.size.height / 2.0);\
+                 break;\
+             \}\
+         \}\
+    \}\
+\}\
+\
+- (void)viewWillAppear:(BOOL)animated \{\
+    [super viewWillAppear:animated];\
+    // --- Added Log ---\
+    NSLog(@"viewWillAppear called");\
+\
+    // Start session if not running\
+    // Add nil check for session\
+    if (self.session && !self.session.isRunning) \{\
+        NSLog(@"viewWillAppear: Starting AVCaptureSession.");\
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^\{\
+            [self.session startRunning];\
+            // Note: There might be a slight delay before the first frame arrives.\
+        \});\
+    \} else if (!self.session) \{\
+         NSLog(@"viewWillAppear: Error - session is nil.");\
+    \}\
+\
+    // Start motion updates if needed and manager exists\
+    if (self.motionManager && !self.motionManager.isDeviceMotionActive) \{\
+        NSLog(@"viewWillAppear: Starting motion updates.");\
+       [self startMotionUpdates]; // Or startMotionUpdatesForCalibration if needed\
+    \} else if (!self.motionManager) \{\
+        NSLog(@"viewWillAppear: Error - motionManager is nil.");\
+    \}\
+\}\
+\
+- (void)viewWillDisappear:(BOOL)animated \{\
+    [super viewWillDisappear:animated];\
+    NSLog(@"viewWillDisappear: Stopping session and motion updates.");\
+    // Stop session and motion updates when view disappears\
+    // Add nil checks for safety\
+    if (self.session && self.session.isRunning) \{\
+        [self.session stopRunning];\
+    \}\
+    if (self.motionManager) \{\
+        [self.motionManager stopDeviceMotionUpdates];\
+    \}\
+\}\
+\
+- (void)dealloc \{\
+    NSLog(@"ViewController dealloc: Stopping motion updates.");\
+    // Ensure motion updates are stopped if the view controller is deallocated\
+    if (self.motionManager) \{ // Add nil check\
+        [self.motionManager stopDeviceMotionUpdates];\
+    \}\
+    // Note: Session is stopped in viewWillDisappear, usually sufficient.\
+    // Setting delegates to nil here can also be good practice if needed.\
+    // self.videoDataOutput.sampleBufferDelegate = nil;\
+\}\
+\
+#pragma mark - Setup Methods\
+\
+- (void)setupVision \{\
+     // Use weak/strong self pattern to avoid retain cycles in blocks\
+     __weak typeof(self) weakSelf = self;\
+     self.horizonRequest = [[VNDetectHorizonRequest alloc]\
+                             initWithCompletionHandler:^(VNRequest *request, NSError *error) \{\
+         // Use strongSelf inside the block\
+         __strong typeof(weakSelf) strongSelf = weakSelf;\
+         if (!strongSelf) return; // If self is nil, exit\
+\
+         // Process results on the main thread for UI updates\
+         dispatch_async(dispatch_get_main_queue(), ^\{\
+             if (error) \{\
+                 NSLog(@"Horizon detection error: %@", error.localizedDescription);\
+                 strongSelf.floorWallIntersectionY = nil; // Reset on error\
+                 [strongSelf updateFloorBlurViewFrame]; // Update UI\
+                 return;\
+             \}\
+\
+             // Safely cast results\
+             NSArray<VNHorizonObservation *> *results = request.results;\
+             VNHorizonObservation *observation = results.firstObject; // Can be nil if no results\
+\
+             if (!observation) \{\
+                  // No horizon detected\
+                 // NSLog(@"No horizon detected."); // Can be noisy, log occasionally if needed\
+                 strongSelf.floorWallIntersectionY = nil; // Reset if no observation\
+                 [strongSelf updateFloorBlurViewFrame]; // Update UI\
+                 return;\
+             \}\
+             // Process the valid observation\
+             [strongSelf processHorizonObservation:observation];\
+         \});\
+     \}];\
+     NSLog(@"Vision setup completed.");\
+\}\
+\
+- (void)setupCamera \{\
+    NSLog(@"setupCamera: Starting.");\
+    self.session = [[AVCaptureSession alloc] init];\
+    if (!self.session) \{ NSLog(@"Error: Failed to create AVCaptureSession."); return; \}\
+    self.session.sessionPreset = AVCaptureSessionPresetHigh;\
+\
+    // Find the back camera\
+    AVCaptureDevice *camera = [AVCaptureDevice defaultDeviceWithDeviceType:AVCaptureDeviceTypeBuiltInWideAngleCamera\
+                                                                 mediaType:AVMediaTypeVideo\
+                                                                  position:AVCaptureDevicePositionBack];\
+    if (!camera) \{ NSLog(@"Error: Back camera unavailable."); return; \}\
+    NSLog(@"setupCamera: Found camera device.");\
+\
+    // Create input\
+    NSError *error = nil;\
+    AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:camera error:&error];\
+    if (error || !input) \{ NSLog(@"Error creating camera input: %@", error.localizedDescription ?: @"Unknown"); return; \}\
+    NSLog(@"setupCamera: Created camera input.");\
+\
+    // Add input to session\
+    if ([self.session canAddInput:input]) \{\
+        [self.session addInput:input];\
+        NSLog(@"setupCamera: Added camera input.");\
+    \} else \{\
+        NSLog(@"Error: Could not add camera input."); return;\
+    \}\
+\
+    // Create output\
+    self.videoDataOutput = [[AVCaptureVideoDataOutput alloc] init];\
+    if (!self.videoDataOutput) \{ NSLog(@"Error: Failed to create AVCaptureVideoDataOutput."); return; \}\
+    // Ensure visionQueue is valid\
+    if (!self.visionQueue) \{\
+        NSLog(@"Error: visionQueue is nil in setupCamera. Creating fallback.");\
+        self.visionQueue = dispatch_queue_create("com.example.visionQueue.fallback", DISPATCH_QUEUE_SERIAL);\
+    \}\
+    [self.videoDataOutput setSampleBufferDelegate:self queue:self.visionQueue]; // Process frames on background queue\
+    self.videoDataOutput.alwaysDiscardsLateVideoFrames = YES; // Recommended for real-time processing\
+    // Specify pixel format (BGRA is common for UI compatibility)\
+    self.videoDataOutput.videoSettings = @\{(id)kCVPixelBufferPixelFormatTypeKey: @(kCVPixelFormatType_32BGRA)\};\
+    NSLog(@"setupCamera: Created video data output.");\
+\
+    // Add output to session\
+    if ([self.session canAddOutput:self.videoDataOutput]) \{\
+        [self.session addOutput:self.videoDataOutput];\
+        NSLog(@"setupCamera: Added video data output.");\
+    \} else \{\
+        NSLog(@"Error: Could not add video data output."); return;\
+    \}\
+\
+    // Configure video rotation (iOS 17+ assumed as per previous request)\
+    AVCaptureConnection *connection = [self.videoDataOutput connectionWithMediaType:AVMediaTypeVideo];\
+    if (connection) \{\
+        CGFloat desiredRotationAngle = 90.0; // Portrait UI\
+        if ([connection isVideoRotationAngleSupported:desiredRotationAngle]) \{\
+            connection.videoRotationAngle = desiredRotationAngle;\
+            NSLog(@"setupCamera: Set videoRotationAngle to %f", desiredRotationAngle);\
+        \} else if ([connection isVideoRotationAngleSupported:0]) \{\
+             connection.videoRotationAngle = 0; // Fallback if 90 not supported\
+             NSLog(@"setupCamera: Warning - angle 90 not supported, set videoRotationAngle to 0");\
+        \} else \{\
+             NSLog(@"setupCamera: Warning - cannot set videoRotationAngle.");\
+        \}\
+        // Configure mirroring (usually NO for back camera)\
+        if (connection.isVideoMirroringSupported) \{\
+            connection.videoMirrored = NO;\
+        \}\
+    \} else \{\
+         NSLog(@"setupCamera: Error - Failed to get video connection for output.");\
+    \}\
+\
+    // Create preview layer\
+    self.previewLayer = [AVCaptureVideoPreviewLayer layerWithSession:self.session];\
+    if (!self.previewLayer) \{ NSLog(@"Error: Failed to create AVCaptureVideoPreviewLayer."); return; \}\
+    self.previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill; // Fill the layer bounds\
+    self.previewLayer.frame = self.view.bounds; // Set initial frame\
+    // Insert camera preview behind other UI elements\
+    [self.view.layer insertSublayer:self.previewLayer atIndex:0];\
+    NSLog(@"setupCamera: Created and added preview layer.");\
+\
+    NSLog(@"setupCamera: Completed.");\
+    // Note: Session is started in viewWillAppear\
+\}\
+\
+- (void)setupUI \{\
+    NSLog(@"setupUI: Starting.");\
+    // Floor blur view\
+    CGFloat defaultBlurHeight = 200.0;\
+    self.defaultBottomBlurFrame = CGRectMake(0, self.view.bounds.size.height - defaultBlurHeight,\
+                                             self.view.bounds.size.width, defaultBlurHeight);\
+    UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemMaterial];\
+    if (!blurEffect) \{ NSLog(@"Error: Failed to create blur effect."); return; \}\
+\
+    self.floorBlurView = [[UIVisualEffectView alloc] initWithEffect:blurEffect];\
+    if (!self.floorBlurView) \{ NSLog(@"Error: Failed to create floorBlurView."); return; \}\
+    self.floorBlurView.frame = self.defaultBottomBlurFrame;\
+    self.floorBlurView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin;\
+    [self applyGradientMaskToView:self.floorBlurView];\
+    [self.view addSubview:self.floorBlurView];\
+    NSLog(@"setupUI: Added floor blur.");\
+\
+    // Central circle blur view\
+    CGFloat circleSize = 100.0;\
+    self.centralCircleBlurView = [[UIVisualEffectView alloc] initWithEffect:blurEffect]; // Reuse effect\
+    if (!self.centralCircleBlurView) \{ NSLog(@"Error: Failed to create centralCircleBlurView."); return; \}\
+    self.centralCircleBlurView.frame = CGRectMake(0, 0, circleSize, circleSize);\
+    self.centralCircleBlurView.center = self.view.center;\
+    self.centralCircleBlurView.autoresizingMask =\
+        UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin |\
+        UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin;\
+    [self applyCircleMaskToView:self.centralCircleBlurView];\
+    [self.view addSubview:self.centralCircleBlurView];\
+     NSLog(@"setupUI: Added circle blur.");\
+\
+    // Calibration button (ensure it was created in viewDidLoad)\
+     if (!self.calibrationButton) \{ NSLog(@"Error: calibrationButton is nil in setupUI."); return; \}\
+    [self.calibrationButton setTitle:@"Start Calibration" forState:UIControlStateNormal];\
+    [self.calibrationButton addTarget:self action:@selector(calibrationButtonTapped:)\
+                  forControlEvents:UIControlEventTouchUpInside];\
+    // Frame set in viewDidLayoutSubviews is usually better for autoresizing, but setting initial here is ok too\
+    self.calibrationButton.frame = CGRectMake(20, self.view.bounds.size.height - 80,\
+                                              self.view.bounds.size.width - 40, 50);\
+    self.calibrationButton.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin;\
+    self.calibrationButton.backgroundColor = [[UIColor systemBlueColor] colorWithAlphaComponent:0.8];\
+    self.calibrationButton.layer.cornerRadius = 10;\
+    self.calibrationButton.titleLabel.font = [UIFont systemFontOfSize:18 weight:UIFontWeightSemibold];\
+    [self.calibrationButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];\
+    [self.view addSubview:self.calibrationButton];\
+    NSLog(@"setupUI: Added calibration button.");\
+\
+    // Status label\
+    self.statusLabel = [[UILabel alloc] init]; // Frame set in viewDidLayoutSubviews\
+    if (!self.statusLabel) \{ NSLog(@"Error: Failed to create statusLabel."); return; \}\
+    self.statusLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleBottomMargin;\
+    self.statusLabel.textColor = [UIColor whiteColor];\
+    self.statusLabel.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.5];\
+    self.statusLabel.textAlignment = NSTextAlignmentCenter;\
+    self.statusLabel.layer.cornerRadius = 5;\
+    self.statusLabel.layer.masksToBounds = YES;\
+    self.statusLabel.font = [UIFont systemFontOfSize:14];\
+    self.statusLabel.text = @"Initializing...";\
+    [self.view addSubview:self.statusLabel];\
+    NSLog(@"setupUI: Added status label.");\
+\
+    // Bring UI elements to front (important!)\
+    [self.view bringSubviewToFront:self.floorBlurView];\
+    [self.view bringSubviewToFront:self.centralCircleBlurView];\
+    [self.view bringSubviewToFront:self.calibrationButton];\
+    [self.view bringSubviewToFront:self.statusLabel];\
+    NSLog(@"setupUI: Set UI element order.");\
+\
+    NSLog(@"setupUI: Completed.");\
+\}\
+\
+#pragma mark - Core Motion & Calibration\
+\
+- (void)startMotionUpdates \{\
+    if (!self.motionManager) \{ NSLog(@"Error: motionManager is nil."); return; \}\
+    if (!self.motionManager.isDeviceMotionAvailable) \{\
+        NSLog(@"Motion sensor unavailable.");\
+        if(self.statusLabel) self.statusLabel.text = @"Motion sensor unavailable";\
+        return;\
+    \}\
+    self.motionManager.deviceMotionUpdateInterval = 0.1; // 10 Hz\
+    NSLog(@"startMotionUpdates: Starting device motion updates.");\
+    __weak typeof(self) weakSelf = self;\
+    [self.motionManager startDeviceMotionUpdatesToQueue:[NSOperationQueue mainQueue] // Update UI directly\
+                                            withHandler:^(CMDeviceMotion *motion, NSError *error) \{\
+        __strong typeof(weakSelf) strongSelf = weakSelf;\
+        if (!strongSelf || !motion) return; // Check self and motion data\
+\
+        if (error) \{\
+            NSLog(@"Motion update error: %@", error.localizedDescription);\
+            strongSelf.isOrientationValid = NO;\
+            if(strongSelf.statusLabel) strongSelf.statusLabel.text = @"Motion Error";\
+            // Consider stopping updates or trying to restart later?\
+            return;\
+        \}\
+\
+        // Check pitch and roll to determine if device is relatively level\
+        double pitch = motion.attitude.pitch;\
+        double roll  = motion.attitude.roll;\
+        // Define thresholds for 'level' (adjust as needed)\
+        BOOL valid = fabs(pitch) < 0.4 && fabs(roll) < 0.3; // Example: within ~23deg pitch, ~17deg roll\
+\
+        // Update state and UI only if validity changes\
+        if (valid != strongSelf.isOrientationValid) \{\
+            strongSelf.isOrientationValid = valid;\
+            NSLog(@"Orientation validity changed: %d", valid);\
+            [strongSelf updateCalibrationUI]; // Update status label based on new validity\
+        \}\
+    \}];\
+\}\
+\
+- (void)calibrationButtonTapped:(UIButton *)sender \{\
+    NSLog(@"Calibration button tapped. Current state: %ld", (long)self.calibrationState);\
+    switch (self.calibrationState) \{\
+        case CalibrationStateIdle:\
+            self.calibrationState = CalibrationStateLookingUp;\
+            [self startMotionUpdatesForCalibration]; // Start listening for pitch\
+            break;\
+        case CalibrationStateLookingUp:\
+            // Tap confirms 'Up' pitch (value already stored by handler)\
+            self.calibrationState = CalibrationStateLookingStraight;\
+            break;\
+        case CalibrationStateLookingStraight:\
+             // Tap confirms 'Straight' (we don't store this pitch currently)\
+            self.calibrationState = CalibrationStateLookingDown;\
+            break;\
+        case CalibrationStateLookingDown:\
+            // Tap confirms 'Down' pitch (value already stored by handler)\
+            [self calculateFloorOffset]; // Calculate using stored Up/Down pitches\
+            self.calibrationState = CalibrationStateCalibrated;\
+            if(self.motionManager) [self.motionManager stopDeviceMotionUpdates]; // Stop specific listener\
+            if(self.motionManager && !self.motionManager.isDeviceMotionActive) [self startMotionUpdates]; // Restart general listener\
+            break;\
+        case CalibrationStateCalibrated:\
+            // Allow recalibration\
+            [self resetCalibration];\
+            break;\
+    \}\
+    [self updateCalibrationUI]; // Update UI text/colors\
+\}\
+\
+- (void)startMotionUpdatesForCalibration \{\
+    if (!self.motionManager) \{ NSLog(@"Error: motionManager is nil."); return; \}\
+    if (!self.motionManager.isDeviceMotionAvailable) \{\
+        NSLog(@"Motion sensor unavailable for calibration.");\
+        if(self.statusLabel) self.statusLabel.text = @"Motion sensor unavailable";\
+        [self resetCalibration]; // Reset state\
+        // updateCalibrationUI called within resetCalibration\
+        return;\
+    \}\
+    self.motionManager.deviceMotionUpdateInterval = 0.05; // Faster updates for calibration capture\
+    NSLog(@"startMotionUpdatesForCalibration: Starting specific motion updates.");\
+    __weak typeof(self) weakSelf = self;\
+    [self.motionManager startDeviceMotionUpdatesToQueue:[NSOperationQueue mainQueue]\
+                                            withHandler:^(CMDeviceMotion *motion, NSError *error) \{\
+        __strong typeof(weakSelf) strongSelf = weakSelf;\
+        if (!strongSelf || !motion) return;\
+\
+        if (error) \{\
+            NSLog(@"Calibration motion error: %@", error.localizedDescription);\
+            [strongSelf resetCalibration]; // Reset state on error\
+            // updateCalibrationUI called within resetCalibration\
+            return;\
+        \}\
+        // Continuously store pitch based on current calibration step\
+        [strongSelf handleCalibrationMotionWithPitch:motion.attitude.pitch];\
+    \}];\
+\}\
+\
+// Stores pitch continuously while in LookingUp or LookingDown states\
+- (void)handleCalibrationMotionWithPitch:(double)pitch \{\
+    if (self.calibrationState == CalibrationStateLookingUp) \{\
+        self.referencePitchUp = @(pitch);\
+        // NSLog(@"Stored Up Pitch: %f", pitch); // Can be noisy\
+    \} else if (self.calibrationState == CalibrationStateLookingDown) \{\
+        self.referencePitchDown = @(pitch);\
+        // NSLog(@"Stored Down Pitch: %f", pitch); // Can be noisy\
+    \}\
+\}\
+\
+- (void)calculateFloorOffset \{\
+    if (!self.referencePitchUp || !self.referencePitchDown) \{\
+        NSLog(@"Error: Missing pitch references for offset calculation.");\
+        if(self.statusLabel) \{\
+            self.statusLabel.text = @"Calibration Error";\
+            self.statusLabel.backgroundColor = [[UIColor redColor] colorWithAlphaComponent:0.6];\
+        \}\
+        return;\
+    \}\
+    double up   = [self.referencePitchUp doubleValue];\
+    double down = [self.referencePitchDown doubleValue];\
+    // Optional: Check if down < up\
+    if (down >= up) \{\
+        NSLog(@"Warning: Down pitch (%f) >= Up pitch (%f). Calibration might be inaccurate.", down, up);\
+    \}\
+    self.floorPitchOffset = @(down - up); // Calculate angular difference\
+    NSLog(@"Calibration Offset Calculated: Up=%.3f, Down=%.3f, Offset=%.3f", up, down, [self.floorPitchOffset doubleValue]);\
+\}\
+\
+- (void)resetCalibration \{\
+    NSLog(@"Resetting Calibration.");\
+    self.calibrationState = CalibrationStateIdle;\
+    self.referencePitchUp = nil;\
+    self.referencePitchDown = nil;\
+    self.floorPitchOffset = nil;\
+    // Stop calibration-specific motion updates if running\
+    if(self.motionManager) [self.motionManager stopDeviceMotionUpdates];\
+    // Ensure general motion updates are (re)started\
+    if(self.motionManager && !self.motionManager.isDeviceMotionActive) \{\
+        [self startMotionUpdates];\
+    \}\
+    [self updateCalibrationUI]; // Update UI for idle state\
+\}\
+\
+- (void)updateCalibrationUI \{\
+    // Determine button/label text based on state and orientation validity\
+    NSString *buttonTitle = @"";\
+    NSString *statusText = @"";\
+    UIColor  *statusColor = [[UIColor blackColor] colorWithAlphaComponent:0.5]; // Default\
+\
+    switch (self.calibrationState) \{\
+        case CalibrationStateIdle:\
+            buttonTitle = @"Start Calibration";\
+            statusText  = self.isOrientationValid ? @"Ready to Calibrate" : @"Hold device level";\
+            statusColor = self.isOrientationValid ? [[UIColor systemBlueColor] colorWithAlphaComponent:0.6] : [[UIColor orangeColor] colorWithAlphaComponent:0.6];\
+            break;\
+        case CalibrationStateLookingUp:\
+            buttonTitle = @"Tap When Looking UP";\
+            statusText  = @"Aim UP at wall/ceiling junction";\
+            statusColor = [[UIColor purpleColor] colorWithAlphaComponent:0.6];\
+            break;\
+        case CalibrationStateLookingStraight:\
+            buttonTitle = @"Tap When Looking STRAIGHT";\
+            statusText  = @"Aim STRAIGHT ahead";\
+            statusColor = [[UIColor purpleColor] colorWithAlphaComponent:0.6];\
+            break;\
+        case CalibrationStateLookingDown:\
+            buttonTitle = @"Tap When Looking DOWN";\
+            statusText  = @"Aim DOWN at floor/wall junction";\
+            statusColor = [[UIColor purpleColor] colorWithAlphaComponent:0.6];\
+            break;\
+        case CalibrationStateCalibrated:\
+            buttonTitle = @"Recalibrate";\
+            statusText  = self.isOrientationValid ? @"Calibrated - Detecting Floor" : @"Hold device level";\
+            statusColor = self.isOrientationValid ? [[UIColor systemGreenColor] colorWithAlphaComponent:0.6] : [[UIColor orangeColor] colorWithAlphaComponent:0.6];\
+            break;\
+    \}\
+\
+    // Update UI elements safely\
+    if (self.calibrationButton) \{\
+        [self.calibrationButton setTitle:buttonTitle forState:UIControlStateNormal];\
+    \}\
+    if (self.statusLabel) \{\
+        self.statusLabel.text = statusText;\
+        self.statusLabel.backgroundColor = statusColor;\
+    \}\
+\}\
+\
+#pragma mark - Vision Processing\
+\
+// Delegate method called for each video frame (on visionQueue)\
+- (void)captureOutput:(AVCaptureOutput *)output didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer\
+       fromConnection:(AVCaptureConnection *)connection \{\
+\
+    // --- Processing Logic ---\
+    // 1. Check if processing should occur\
+    if (!self.isOrientationValid) \{\
+        // If orientation becomes invalid while calibrated, reset floor detection on main thread\
+        if (self.calibrationState == CalibrationStateCalibrated && self.floorWallIntersectionY != nil) \{\
+            dispatch_async(dispatch_get_main_queue(), ^\{\
+                // Check again in case state changed back quickly\
+                if (!self.isOrientationValid && self.floorWallIntersectionY != nil) \{\
+                     NSLog(@"Orientation invalid, resetting floor Y.");\
+                     self.floorWallIntersectionY = nil;\
+                     [self updateFloorBlurViewFrame];\
+                \}\
+            \});\
+        \}\
+        return; // Don't process if orientation is invalid\
+    \}\
+    // Ensure request exists (should be created in setupVision)\
+    if (!self.horizonRequest) \{ return; \}\
+\
+    // 2. Get image buffer\
+    CVImageBufferRef pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);\
+    if (!pixelBuffer) \{ NSLog(@"Error: Failed to get pixel buffer from sample buffer."); return; \}\
+\
+    // 3. Create request handler with correct orientation\
+    CGImagePropertyOrientation orientation = [self currentCGImageOrientationForBuffer];\
+    VNImageRequestHandler *handler = [[VNImageRequestHandler alloc]\
+                                      initWithCVPixelBuffer:pixelBuffer\
+                                      orientation:orientation\
+                                      options:@\{\}];\
+\
+    // 4. Perform Vision request\
+    NSError *error = nil;\
+    BOOL success = [handler performRequests:@[self.horizonRequest] error:&error];\
+\
+    // 5. Handle results (or errors) - completion handler in setupVision does this\
+    if (!success || error) \{\
+        NSLog(@"Error performing Vision request from captureOutput: %@", error.localizedDescription ?: @"Unknown Vision error");\
+        // Note: The completion handler in setupVision already handles resetting floor Y on error\
+    \}\
+    // --- End Processing Logic ---\
+\}\
+\
+// Processes the result of a successful horizon detection (called on main thread)\
+- (void)processHorizonObservation:(VNHorizonObservation *)observation \{\
+    // Ensure preview layer exists for coordinate conversion\
+    if (!self.previewLayer) \{\
+        NSLog(@"Error: previewLayer is nil in processHorizonObservation");\
+        self.floorWallIntersectionY = nil;\
+        [self updateFloorBlurViewFrame]; // Update UI on main thread\
+        return;\
+    \}\
+\
+    // Calculate normalized point where horizon intersects left edge\
+    CGPoint normalizedPoint = CGPointApplyAffineTransform(CGPointZero, // Check horizon intersection at x=0\
+                                                          CGAffineTransformInvert(observation.transform));\
+\
+    // Validate normalized point\
+    if (!isfinite(normalizedPoint.x) || !isfinite(normalizedPoint.y)) \{\
+        NSLog(@"Warning: Invalid normalized point from Vision (%.2f, %.2f). Resetting floor.", normalizedPoint.x, normalizedPoint.y);\
+        self.floorWallIntersectionY = nil;\
+        [self updateFloorBlurViewFrame]; // Update UI on main thread\
+        return;\
+    \}\
+\
+    // Convert normalized point to view coordinates using the correct API\
+    CGPoint viewPoint = [self.previewLayer pointForCaptureDevicePointOfInterest:normalizedPoint];\
+\
+    // Validate and clamp the resulting Y coordinate\
+    CGFloat detectedY = viewPoint.y;\
+    CGFloat viewHeight = self.view.bounds.size.height;\
+    CGFloat tolerance = 5.0; // Allow slightly outside bounds\
+\
+    if (!isfinite(detectedY) || detectedY < -tolerance || detectedY > (viewHeight + tolerance)) \{\
+        NSLog(@"Warning: Detected Y (%.1f) is outside view bounds (0-%.1f) or invalid. Resetting floor.", detectedY, viewHeight);\
+        self.floorWallIntersectionY = nil;\
+        [self updateFloorBlurViewFrame]; // Update UI on main thread\
+        return;\
+    \}\
+    // Clamp to valid view bounds\
+    detectedY = MAX(0, MIN(detectedY, viewHeight));\
+\
+    // Store the validated coordinate\
+    self.floorWallIntersectionY = @(detectedY);\
+\
+    // Update the blur view's frame (already on main thread)\
+    [self updateFloorBlurViewFrame];\
+\
+    // Optional debug log\
+    // NSLog(@"Horizon: Norm(%.3f, %.3f) -> View(%.1f, %.1f) -> Final Y: %.1f",\
+    //       normalizedPoint.x, normalizedPoint.y, viewPoint.x, viewPoint.y, detectedY);\
+\}\
+\
+// Determines the correct image orientation for Vision requests (iOS 17+ assumed)\
+- (CGImagePropertyOrientation)currentCGImageOrientationForBuffer \{\
+    CGImagePropertyOrientation cgOrientation = kCGImagePropertyOrientationRight; // Default (Portrait UI)\
+\
+    // Use the video connection's rotation angle if possible\
+    if (self.videoDataOutput) \{\
+        AVCaptureConnection *connection = [self.videoDataOutput connectionWithMediaType:AVMediaTypeVideo];\
+        if (connection) \{\
+            CGFloat angle = connection.videoRotationAngle;\
+            // Map angle to CGImagePropertyOrientation\
+            switch ((int)angle) \{\
+                case 0:   cgOrientation = kCGImagePropertyOrientationUp; break;    // Landscape sensor, 0 deg = Up\
+                case 90:  cgOrientation = kCGImagePropertyOrientationRight; break; // Landscape sensor, 90 deg = Right (Portrait UI)\
+                case 180: cgOrientation = kCGImagePropertyOrientationDown; break;  // Landscape sensor, 180 deg = Down\
+                case 270: cgOrientation = kCGImagePropertyOrientationLeft; break;  // Landscape sensor, 270 deg = Left (Portrait Down UI)\
+                default:\
+                    NSLog(@"Warning: Unexpected videoRotationAngle: %f. Defaulting orientation.", angle);\
+                    cgOrientation = kCGImagePropertyOrientationRight; // Sensible default\
+                    break;\
+            \}\
+            return cgOrientation; // Return orientation from connection\
+        \} else \{\
+             NSLog(@"Warning: Could not get video connection in currentCGImageOrientationForBuffer.");\
+        \}\
+    \} else \{\
+         NSLog(@"Warning: videoDataOutput is nil in currentCGImageOrientationForBuffer.");\
+    \}\
+\
+    // Fallback only if connection/angle couldn't be read\
+    NSLog(@"Warning: Falling back to device orientation for CGImageOrientation.");\
+    UIDeviceOrientation deviceOrientation = [UIDevice currentDevice].orientation;\
+    switch (deviceOrientation) \{\
+        case UIDeviceOrientationLandscapeLeft:      cgOrientation = kCGImagePropertyOrientationUp; break;\
+        case UIDeviceOrientationLandscapeRight:     cgOrientation = kCGImagePropertyOrientationDown; break;\
+        case UIDeviceOrientationPortrait:           cgOrientation = kCGImagePropertyOrientationRight; break;\
+        case UIDeviceOrientationPortraitUpsideDown: cgOrientation = kCGImagePropertyOrientationLeft; break;\
+        default:                                    cgOrientation = kCGImagePropertyOrientationRight; break; // Default\
+    \}\
+    return cgOrientation;\
+\}\
+\
+#pragma mark - Blur & Mask Effects\
+\
+// Calculates the target frame for the floor blur view\
+- (CGRect)calculateFloorBlurFrame \{\
+    CGRect targetFrame;\
+    CGFloat viewWidth = self.view.bounds.size.width;\
+    CGFloat viewHeight = self.view.bounds.size.height;\
+\
+    if (self.floorWallIntersectionY != nil) \{\
+        // Use detected Y, ensuring it's within bounds\
+        CGFloat floorY = MAX(0, MIN([self.floorWallIntersectionY doubleValue], viewHeight));\
+        CGFloat blurHeight = MAX(0, viewHeight - floorY); // Height from floorY to bottom\
+        targetFrame = CGRectMake(0, floorY, viewWidth, blurHeight);\
+    \} else \{\
+        // Use default frame if no detection\
+        // Ensure default frame is updated based on current bounds\
+        CGFloat defaultBlurHeight = 200.0; // Or read from defaultBottomBlurFrame.size.height\
+        targetFrame = CGRectMake(0, viewHeight - defaultBlurHeight, viewWidth, defaultBlurHeight);\
+        self.defaultBottomBlurFrame = targetFrame; // Update stored default\
+    \}\
+    return targetFrame;\
+\}\
+\
+// Updates the frame of the floor blur view (must be called on main thread)\
+- (void)updateFloorBlurViewFrame \{\
+    if (!self.floorBlurView) \{ return; \} // Safety check\
+\
+    CGRect targetFrame = [self calculateFloorBlurFrame];\
+\
+    // Avoid redundant animations if frame hasn't changed\
+    if (CGRectEqualToRect(self.floorBlurView.frame, targetFrame)) \{\
+        return;\
+    \}\
+\
+    // Animate the frame change\
+    [UIView animateWithDuration:0.1 // Short duration for smooth transition\
+                     animations:^\{\
+        self.floorBlurView.frame = targetFrame;\
+        // Update the mask frame within the animation block\
+        [self updateGradientMaskFrameForView:self.floorBlurView];\
+    \}];\
+\}\
+\
+// Applies gradient mask (fade effect) to a view\
+- (void)applyGradientMaskToView:(UIVisualEffectView *)view \{\
+    if (!view) return;\
+    CAGradientLayer *mask = [CAGradientLayer layer];\
+    mask.colors = @[(id)[UIColor clearColor].CGColor,                              // Top (fully transparent)\
+                    (id)[[UIColor blackColor] colorWithAlphaComponent:0.5].CGColor, // Mid-fade\
+                    (id)[UIColor blackColor].CGColor,                              // Mostly opaque\
+                    (id)[UIColor blackColor].CGColor];                             // Bottom (fully opaque)\
+    mask.locations = @[@0.0, @0.15, @0.4, @1.0]; // Control fade points\
+    mask.startPoint = CGPointMake(0.5, 0.0);     // Gradient top-to-bottom\
+    mask.endPoint = CGPointMake(0.5, 1.0);\
+    mask.frame = view.bounds;                    // Mask covers the view's bounds\
+    view.layer.mask = mask;\
+\}\
+\
+// Updates gradient mask frame (call when view frame changes)\
+- (void)updateGradientMaskFrameForView:(UIVisualEffectView *)view \{\
+    if (view && view.layer.mask) \{ // Check view and mask exist\
+        view.layer.mask.frame = view.bounds;\
+    \}\
+\}\
+\
+// Applies a circular mask to a view\
+- (void)applyCircleMaskToView:(UIVisualEffectView *)view \{\
+    if (!view) return;\
+    CAShapeLayer *mask = [CAShapeLayer layer];\
+    // Create path matching the view's bounds\
+    mask.path = [UIBezierPath bezierPathWithOvalInRect:view.bounds].CGPath;\
+    view.layer.mask = mask;\
+\}\
+\
+// Updates circle mask frame and path (call when view frame changes)\
+- (void)updateCircleMaskFrameForView:(UIVisualEffectView *)view \{\
+    if (!view) return;\
+    // Check if mask is a CAShapeLayer\
+    if ([view.layer.mask isKindOfClass:[CAShapeLayer class]]) \{\
+        CAShapeLayer *mask = (CAShapeLayer *)view.layer.mask;\
+        // Update path and frame to match current view bounds\
+        mask.path = [UIBezierPath bezierPathWithOvalInRect:view.bounds].CGPath;\
+        mask.frame = view.bounds;\
+    \}\
+\}\
+\
+@end\
+}

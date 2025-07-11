@@ -1,0 +1,560 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2575.4">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Menlo; color: #c41a16; background-color: #ffffff}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Menlo; color: #000000; color: rgba(0, 0, 0, 0.85); background-color: #ffffff; min-height: 14.0px}
+    p.p3 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Menlo; color: #5d6c79; background-color: #ffffff}
+    p.p4 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Menlo; color: #0b4f79; background-color: #ffffff}
+    p.p5 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Menlo; color: #9b2393; background-color: #ffffff}
+    p.p6 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Menlo; color: #000000; color: rgba(0, 0, 0, 0.85); background-color: #ffffff}
+    p.p7 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Menlo; color: #6c36a9; background-color: #ffffff}
+    p.p8 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Menlo; color: #3900a0; background-color: #ffffff}
+    p.p9 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Menlo; color: #0f68a0; background-color: #ffffff}
+    p.p10 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Menlo; color: #326d74; background-color: #ffffff}
+    p.p11 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Menlo; color: #643820; background-color: #ffffff}
+    span.s1 {color: #643820}
+    span.s2 {color: #9b2393}
+    span.s3 {color: rgba(0, 0, 0, 0.85)}
+    span.s4 {color: #0b4f79}
+    span.s5 {color: #0f68a0}
+    span.s6 {color: #3900a0}
+    span.s7 {color: #6c36a9}
+    span.s8 {color: #1c00cf}
+    span.s9 {color: #5d6c79}
+    span.s10 {color: #1c464a}
+    span.s11 {color: #326d74}
+    span.s12 {color: #c41a16}
+  </style>
+</head>
+<body>
+<p class="p1"><span class="s1">#import </span>"ViewController.h"</p>
+<p class="p1"><span class="s1">#import </span>&lt;AVFoundation/AVFoundation.h&gt;</p>
+<p class="p1"><span class="s1">#import </span>&lt;ARKit/ARKit.h&gt;</p>
+<p class="p1"><span class="s1">#import </span>&lt;CoreMotion/CoreMotion.h&gt;</p>
+<p class="p2"><br></p>
+<p class="p3">// Declare CircleView class</p>
+<p class="p4"><span class="s2"><b>@interface</b></span><span class="s3"> </span>CircleView<span class="s3"> : </span>UIView</p>
+<p class="p5"><b>@end</b><b></b></p>
+<p class="p2"><br></p>
+<p class="p5"><b>@implementation</b><span class="s3"> </span><span class="s4">CircleView</span></p>
+<p class="p2"><br></p>
+<p class="p6">- (<span class="s2"><b>instancetype</b></span>)<span class="s5">initWithFrame</span>:(<span class="s6">CGRect</span>)frame {</p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s2"><b>self</b></span> = [<span class="s2"><b>super</b></span> <span class="s7">initWithFrame</span>:frame];</p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s2"><b>if</b></span> (<span class="s2"><b>self</b></span>) {</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s2"><b>self</b></span><span class="s3">.</span>backgroundColor<span class="s3"> = [</span><span class="s6">UIColor</span><span class="s3"> </span>colorWithWhite<span class="s3">:</span><span class="s8">1.0</span><span class="s3"> </span>alpha<span class="s3">:</span><span class="s8">0.8</span><span class="s3">]; </span><span class="s9">// Semi-transparent white</span></p>
+<p class="p6"><span class="Apple-converted-space">        </span><span class="s2"><b>self</b></span>.<span class="s7">layer</span>.<span class="s7">cornerRadius</span> = frame.<span class="s7">size</span>.<span class="s7">width</span> / <span class="s8">2.0</span>;<span class="Apple-converted-space">  </span><span class="s9">// Make it a circle</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s2"><b>self</b></span><span class="s3">.</span>layer<span class="s3">.</span>borderWidth<span class="s3"> = </span><span class="s8">2</span><span class="s3">;</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s2"><b>self</b></span><span class="s3">.</span>layer<span class="s3">.</span>borderColor<span class="s3"> = [</span><span class="s6">UIColor</span><span class="s3"> </span>blueColor<span class="s3">].</span>CGColor<span class="s3">;</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s2"><b>self</b></span><span class="s3">.</span>translatesAutoresizingMaskIntoConstraints<span class="s3"> = </span><span class="s2"><b>NO</b></span><span class="s3">; </span><span class="s9">// Add this line</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span>}</p>
+<p class="p5"><span class="s3"><span class="Apple-converted-space">    </span></span><b>return</b><span class="s3"> </span><b>self</b><span class="s3">;</span></p>
+<p class="p6">}</p>
+<p class="p2"><br></p>
+<p class="p5"><b>@end</b><b></b></p>
+<p class="p2"><br></p>
+<p class="p2"><br></p>
+<p class="p8"><span class="s2"><b>@interface</b></span><span class="s3"> </span><span class="s10">ViewController</span><span class="s3"> () &lt;</span>ARSessionDelegate<span class="s3">&gt;</span></p>
+<p class="p5"><b>@property</b><span class="s3"> (</span><b>nonatomic</b><span class="s3">, </span><b>strong</b><span class="s3">) </span><span class="s6">ARSession</span><span class="s3"> *</span><span class="s5">arSession</span><span class="s3">;</span></p>
+<p class="p5"><b>@property</b><span class="s3"> (</span><b>nonatomic</b><span class="s3">, </span><b>strong</b><span class="s3">) </span><span class="s6">ARSCNView</span><span class="s3"> *</span><span class="s5">arSceneView</span><span class="s3">;</span></p>
+<p class="p5"><b>@property</b><span class="s3"> (</span><b>nonatomic</b><span class="s3">, </span><b>strong</b><span class="s3">) </span><span class="s6">UIVisualEffectView</span><span class="s3"> *</span><span class="s5">floorBlurView</span><span class="s3">;</span></p>
+<p class="p5"><b>@property</b><span class="s3"> (</span><b>nonatomic</b><span class="s3">, </span><b>strong</b><span class="s3">) </span><span class="s6">UIVisualEffectView</span><span class="s3"> *</span><span class="s5">bottomBlurView</span><span class="s3">;</span></p>
+<p class="p5"><b>@property</b><span class="s3"> (</span><b>nonatomic</b><span class="s3">, </span><b>strong</b><span class="s3">) </span><span class="s6">NSMutableArray</span><span class="s3">&lt;</span><span class="s6">NSNumber</span><span class="s3"> *&gt; *</span><span class="s5">previousFloorPositions</span><span class="s3">;</span></p>
+<p class="p5"><b>@property</b><span class="s3"> (</span><b>nonatomic</b><span class="s3">, </span><b>assign</b><span class="s3">) </span><span class="s6">NSTimeInterval</span><span class="s3"> </span><span class="s5">lastUpdateTime</span><span class="s3">;</span></p>
+<p class="p5"><b>@property</b><span class="s3"> (</span><b>nonatomic</b><span class="s3">, </span><b>strong</b><span class="s3">) </span><span class="s6">CMMotionManager</span><span class="s3"> *</span><span class="s5">motionManager</span><span class="s3">;</span></p>
+<p class="p5"><b>@property</b><span class="s3"> (</span><b>nonatomic</b><span class="s3">, </span><b>assign</b><span class="s3">) </span><span class="s6">CGFloat</span><span class="s3"> </span><span class="s5">deviceAngle</span><span class="s3">;</span></p>
+<p class="p5"><b>@property</b><span class="s3"> (</span><b>nonatomic</b><span class="s3">, </span><b>strong</b><span class="s3">) </span><span class="s6">UIView</span><span class="s3"> *</span><span class="s5">introView</span><span class="s3">;</span></p>
+<p class="p5"><b>@property</b><span class="s3"> (</span><b>nonatomic</b><span class="s3">, </span><b>assign</b><span class="s3">) </span><b>BOOL</b><span class="s3"> </span><span class="s5">hasShownIntro</span><span class="s3">;</span></p>
+<p class="p5"><b>@property</b><span class="s3"> (</span><b>nonatomic</b><span class="s3">, </span><b>strong</b><span class="s3">) </span><span class="s6">UILabel</span><span class="s3"> *</span><span class="s5">statusLabel</span><span class="s3">;</span></p>
+<p class="p5"><b>@property</b><span class="s3"> (</span><b>nonatomic</b><span class="s3">, </span><b>strong</b><span class="s3">) </span><span class="s6">dispatch_queue_t</span><span class="s3"> </span><span class="s5">sessionQueue</span><span class="s3">;</span></p>
+<p class="p5"><b>@property</b><span class="s3"> (</span><b>nonatomic</b><span class="s3">, </span><b>assign</b><span class="s3">) </span><b>BOOL</b><span class="s3"> </span><span class="s5">isFloorDetected</span><span class="s3">;</span></p>
+<p class="p5"><b>@property</b><span class="s3"> (</span><b>nonatomic</b><span class="s3">, </span><b>strong</b><span class="s3">) </span><span class="s6">AVCaptureSession</span><span class="s3"> *</span><span class="s5">captureSession</span><span class="s3">;</span></p>
+<p class="p8"><span class="s2"><b>@property</b></span><span class="s3"> (</span><span class="s2"><b>nonatomic</b></span><span class="s3">, </span><span class="s2"><b>weak</b></span><span class="s3">) </span>AVCaptureVideoPreviewLayer<span class="s3"> *</span><span class="s5">previewLayer</span><span class="s3">;</span></p>
+<p class="p5"><b>@property</b><span class="s3"> (</span><b>nonatomic</b><span class="s3">, </span><b>assign</b><span class="s3">) </span><b>BOOL</b><span class="s3"> </span><span class="s5">isFloorPlaneAdded</span><span class="s3">;</span></p>
+<p class="p5"><b>@property</b><span class="s3"> (</span><b>nonatomic</b><span class="s3">, </span><b>strong</b><span class="s3">) </span><span class="s6">SCNNode</span><span class="s3"> *</span><span class="s5">floorNode</span><span class="s3">;</span></p>
+<p class="p5"><b>@property</b><span class="s3"> (</span><b>nonatomic</b><span class="s3">, </span><b>strong</b><span class="s3">) </span><span class="s6">UIView</span><span class="s3"> *</span><span class="s5">circleView</span><span class="s3">;</span></p>
+<p class="p3"><span class="s2"><b>@property</b></span><span class="s3"> (</span><span class="s2"><b>nonatomic</b></span><span class="s3">, </span><span class="s2"><b>strong</b></span><span class="s3">) </span><span class="s6">SCNPlane</span><span class="s3"> *</span><span class="s5">planeGeometry</span><span class="s3">; </span>// Keep a reference to the plane geometry</p>
+<p class="p5"><b>@end</b><b></b></p>
+<p class="p2"><br></p>
+<p class="p5"><b>@implementation</b><span class="s3"> </span><span class="s4">ViewController</span></p>
+<p class="p2"><br></p>
+<p class="p9"><span class="s3">- (</span><span class="s2"><b>void</b></span><span class="s3">)</span>viewDidLoad<span class="s3"> {</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>[</span><span class="s2"><b>super</b></span><span class="s3"> </span>viewDidLoad<span class="s3">];</span></p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span>previousFloorPositions<span class="s3"> = [</span><span class="s6">NSMutableArray</span><span class="s3"> </span><span class="s7">arrayWithCapacity</span><span class="s3">:</span><span class="s8">10</span><span class="s3">];</span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span>lastUpdateTime<span class="s3"> = </span><span class="s8">0</span><span class="s3">;</span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span>hasShownIntro<span class="s3"> = </span><span class="s2"><b>NO</b></span><span class="s3">;</span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span>isFloorDetected<span class="s3"> = </span><span class="s2"><b>NO</b></span><span class="s3">;</span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span>isFloorPlaneAdded<span class="s3"> = </span><span class="s2"><b>NO</b></span><span class="s3">;</span></p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">    </span></span>// Create a serial queue for ARSession updates.</p>
+<p class="p1"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">sessionQueue</span><span class="s3"> = </span><span class="s7">dispatch_queue_create</span><span class="s3">(</span>"com.example.arSessionQueue"<span class="s3">, </span><span class="s1">DISPATCH_QUEUE_SERIAL</span><span class="s3">);</span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>if</b></span><span class="s3"> (!</span><span class="s2"><b>self</b></span><span class="s3">.</span>sessionQueue<span class="s3">) {</span></p>
+<p class="p1"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s7">NSLog</span><span class="s3">(</span>@"Failed to create session queue."<span class="s3">);</span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">        </span></span>// Handle the error, perhaps by disabling AR functionality</p>
+<p class="p6"><span class="Apple-converted-space">        </span><span class="s2"><b>return</b></span>;</p>
+<p class="p6"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">    </span>[</span><span class="s2"><b>self</b></span><span class="s3"> </span>setupIntroScreen<span class="s3">];</span></p>
+<p class="p6">}</p>
+<p class="p2"><br></p>
+<p class="p9"><span class="s3">- (</span><span class="s2"><b>void</b></span><span class="s3">)</span>setupIntroScreen<span class="s3"> {</span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">    </span></span>// Step 1: Start with a grey background</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">introView</span><span class="s3"> = [[</span><span class="s6">UIView</span><span class="s3"> </span>alloc<span class="s3">] </span>initWithFrame<span class="s3">:</span><span class="s2"><b>self</b></span><span class="s3">.</span>view<span class="s3">.</span>bounds<span class="s3">];</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">introView</span><span class="s3">.</span>backgroundColor<span class="s3"> = [</span><span class="s6">UIColor</span><span class="s3"> </span>colorWithWhite<span class="s3">:</span><span class="s8">0.2</span><span class="s3"> </span>alpha<span class="s3">:</span><span class="s8">1.0</span><span class="s3">];</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">introView</span><span class="s3">.</span>translatesAutoresizingMaskIntoConstraints<span class="s3"> = </span><span class="s2"><b>NO</b></span><span class="s3">; </span><span class="s9">// Add this line</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>[</span><span class="s2"><b>self</b></span><span class="s3">.</span>view<span class="s3"> </span>addSubview<span class="s3">:</span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">introView</span><span class="s3">];</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">     </span>[</span><span class="s6">NSLayoutConstraint</span><span class="s3"> </span>activateConstraints<span class="s3">:</span><span class="s8">@[</span></p>
+<p class="p6"><span class="Apple-converted-space">                                              </span>[<span class="s2"><b>self</b></span>.<span class="s11">introView</span>.<span class="s7">topAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s7">view</span>.<span class="s7">topAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                              </span>[<span class="s2"><b>self</b></span>.<span class="s11">introView</span>.<span class="s7">bottomAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s7">view</span>.<span class="s7">bottomAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                              </span>[<span class="s2"><b>self</b></span>.<span class="s11">introView</span>.<span class="s7">leadingAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s7">view</span>.<span class="s7">leadingAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                              </span>[<span class="s2"><b>self</b></span>.<span class="s11">introView</span>.<span class="s7">trailingAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s7">view</span>.<span class="s7">trailingAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                              </span><span class="s8">]</span>];</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">    </span></span>// Step 2: Add a background camera feed with a frozen effect</p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">    </span>[</span><span class="s2"><b>self</b></span><span class="s3"> </span>setupFrozenBackground<span class="s3">];</span></p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">    </span></span>// Step 3: Add the UI elements on top</p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">    </span>[</span><span class="s2"><b>self</b></span><span class="s3"> </span>setupFloatingUIElements<span class="s3">];</span></p>
+<p class="p6">}</p>
+<p class="p2"><br></p>
+<p class="p9"><span class="s3">- (</span><span class="s2"><b>void</b></span><span class="s3">)</span>setupFrozenBackground<span class="s3"> {</span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">    </span></span>// Camera feed as the background</p>
+<p class="p8"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">captureSession</span><span class="s3"> = [[</span>AVCaptureSession<span class="s3"> </span><span class="s7">alloc</span><span class="s3">] </span><span class="s7">init</span><span class="s3">];</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s6">AVCaptureSession</span> *session = <span class="s2"><b>self</b></span>.<span class="s11">captureSession</span>;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">    </span></span>// Check if the session is valid</p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s2"><b>if</b></span> (!session) {</p>
+<p class="p1"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s7">NSLog</span><span class="s3">(</span>@"Failed to create capture session."<span class="s3">);</span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s2"><b>return</b></span><span class="s3">; </span>// IMPORTANT: Return if the session is invalid</p>
+<p class="p6"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s6">AVCaptureDevice</span><span class="s3"> *device = [</span><span class="s6">AVCaptureDevice</span><span class="s3"> </span>defaultDeviceWithMediaType<span class="s3">:</span>AVMediaTypeVideo<span class="s3">];</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s6">NSError</span> *error = <span class="s2"><b>nil</b></span>;</p>
+<p class="p8"><span class="s3"><span class="Apple-converted-space">    </span></span>AVCaptureDeviceInput<span class="s3"> *input = [</span>AVCaptureDeviceInput<span class="s3"> </span><span class="s7">deviceInputWithDevice</span><span class="s3">:device </span><span class="s7">error</span><span class="s3">:&amp;error];</span></p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s2"><b>if</b></span> (error) {</p>
+<p class="p1"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s7">NSLog</span><span class="s3">(</span>@"Error creating device input: %@"<span class="s3">, error.</span><span class="s7">localizedDescription</span><span class="s3">);</span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s2"><b>return</b></span><span class="s3">; </span>// IMPORTANT: Return if there's an error with the input</p>
+<p class="p6"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s2"><b>if</b></span> ([session <span class="s7">canAddInput</span>:input]) {</p>
+<p class="p6"><span class="Apple-converted-space">        </span>[session <span class="s7">addInput</span>:input];</p>
+<p class="p6"><span class="Apple-converted-space">    </span>} <span class="s2"><b>else</b></span> {</p>
+<p class="p1"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s7">NSLog</span><span class="s3">(</span>@"Could not add input to capture session."<span class="s3">);</span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s2"><b>return</b></span><span class="s3">; </span>// IMPORTANT: Return if the input cannot be added</p>
+<p class="p6"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">    </span></span>// Set up the camera preview layer to show the video feed</p>
+<p class="p8"><span class="s3"><span class="Apple-converted-space">    </span></span>AVCaptureVideoPreviewLayer<span class="s3"> *previewLayer = [</span>AVCaptureVideoPreviewLayer<span class="s3"> </span><span class="s7">layerWithSession</span><span class="s3">:session];</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span>previewLayer.<span class="s7">frame</span> = <span class="s2"><b>self</b></span>.<span class="s7">view</span>.<span class="s7">bounds</span>;</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>previewLayer.</span>videoGravity<span class="s3"> = </span>AVLayerVideoGravityResizeAspectFill<span class="s3">;</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span>[<span class="s2"><b>self</b></span>.<span class="s11">introView</span>.<span class="s7">layer</span> <span class="s7">addSublayer</span>:previewLayer];</p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">previewLayer</span><span class="s3"> = previewLayer; </span>// Store weak reference</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">    </span></span>// Start the camera feed on a background thread.<span class="Apple-converted-space">  </span>This addresses the "Performing I/O on the main thread" warning.</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span>dispatch_async<span class="s3">(</span>dispatch_get_global_queue<span class="s3">(</span><span class="s1">DISPATCH_QUEUE_PRIORITY_DEFAULT</span><span class="s3">, </span><span class="s8">0</span><span class="s3">), ^{</span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s2"><b>if</b></span><span class="s3"> (session) { </span>// Check again before using it</p>
+<p class="p6"><span class="Apple-converted-space">           </span>[session <span class="s7">startRunning</span>];</p>
+<p class="p6"><span class="Apple-converted-space">        </span>}</p>
+<p class="p6"><span class="Apple-converted-space">    </span>});</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">    </span></span>// Step 4: Apply a very strong blur effect (frozen look)</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s6">UIBlurEffect</span><span class="s3"> *frozenBlurEffect = [</span><span class="s6">UIBlurEffect</span><span class="s3"> </span>effectWithStyle<span class="s3">:</span>UIBlurEffectStyleExtraLight<span class="s3">];</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s6">UIVisualEffectView</span> *frozenBlurView = [[<span class="s6">UIVisualEffectView</span> <span class="s7">alloc</span>] <span class="s7">initWithEffect</span>:frozenBlurEffect];</p>
+<p class="p6"><span class="Apple-converted-space">    </span>frozenBlurView.<span class="s7">frame</span> = <span class="s2"><b>self</b></span>.<span class="s7">view</span>.<span class="s7">bounds</span>;</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">     </span>frozenBlurView.</span>translatesAutoresizingMaskIntoConstraints<span class="s3"> = </span><span class="s2"><b>NO</b></span><span class="s3">; </span><span class="s9">// Add this line.</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span>[<span class="s2"><b>self</b></span>.<span class="s11">introView</span> <span class="s7">addSubview</span>:frozenBlurView];</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">     </span>[</span><span class="s6">NSLayoutConstraint</span><span class="s3"> </span>activateConstraints<span class="s3">:</span><span class="s8">@[</span></p>
+<p class="p6"><span class="Apple-converted-space">                                                 </span>[frozenBlurView.<span class="s7">topAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s11">introView</span>.<span class="s7">topAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                                 </span>[frozenBlurView.<span class="s7">bottomAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s11">introView</span>.<span class="s7">bottomAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                                 </span>[frozenBlurView.<span class="s7">leadingAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s11">introView</span>.<span class="s7">leadingAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                                 </span>[frozenBlurView.<span class="s7">trailingAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s11">introView</span>.<span class="s7">trailingAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                                 </span><span class="s8">]</span>];</p>
+<p class="p6">}</p>
+<p class="p2"><br></p>
+<p class="p9"><span class="s3">- (</span><span class="s2"><b>void</b></span><span class="s3">)</span>setupFloatingUIElements<span class="s3"> {</span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">    </span></span>// Adjust the font size, shadow, and layout of the UI elements</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s6">UILabel</span><span class="s3"> *titleLabel = [</span><span class="s2"><b>self</b></span><span class="s3"> </span>createLabelWithText<span class="s3">:</span><span class="s12">@"AR Floor Detector"</span><span class="s3"> </span>fontSize<span class="s3">:</span><span class="s8">40</span><span class="s3"> </span>weight<span class="s3">:</span><span class="s7">UIFontWeightBold</span><span class="s3">];</span></p>
+<p class="p1"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s6">UILabel</span><span class="s3"> *descriptionLabel = [</span><span class="s2"><b>self</b></span><span class="s3"> </span><span class="s11">createLabelWithText</span><span class="s3">:</span>@"This app uses ARKit to detect floors..."<span class="s3"> </span><span class="s11">fontSize</span><span class="s3">:</span><span class="s8">18</span><span class="s3"> </span><span class="s11">weight</span><span class="s3">:</span><span class="s7">UIFontWeightRegular</span><span class="s3">];</span></p>
+<p class="p1"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s6">UILabel</span><span class="s3"> *instructionsLabel = [</span><span class="s2"><b>self</b></span><span class="s3"> </span><span class="s11">createLabelWithText</span><span class="s3">:</span>@"Move your device slowly and scan the floor."<span class="s3"> </span><span class="s11">fontSize</span><span class="s3">:</span><span class="s8">16</span><span class="s3"> </span><span class="s11">weight</span><span class="s3">:</span><span class="s7">UIFontWeightMedium</span><span class="s3">];</span></p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s6">UIButton</span> *startButton = [<span class="s2"><b>self</b></span> <span class="s11">createButtonWithTitle</span>:<span class="s12">@"Start"</span>];</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>[startButton </span>addTarget<span class="s3">:</span><span class="s2"><b>self</b></span><span class="s3"> </span>action<span class="s3">:</span><span class="s2"><b>@selector</b></span><span class="s3">(startButtonTapped) </span>forControlEvents<span class="s3">:</span>UIControlEventTouchUpInside<span class="s3">];</span></p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">    </span></span>// Wrapping UI elements inside floating frames</p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s6">UIView</span> *titleFrame = [<span class="s2"><b>self</b></span> <span class="s11">createFloatingFrameForView</span>:titleLabel];</p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s6">UIView</span> *descriptionFrame = [<span class="s2"><b>self</b></span> <span class="s11">createFloatingFrameForView</span>:descriptionLabel];</p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s6">UIView</span> *instructionsFrame = [<span class="s2"><b>self</b></span> <span class="s11">createFloatingFrameForView</span>:instructionsLabel];</p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s6">UIView</span> *startButtonFrame = [<span class="s2"><b>self</b></span> <span class="s11">createFloatingFrameForView</span>:startButton];</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p6"><span class="Apple-converted-space">    </span>[<span class="s2"><b>self</b></span>.<span class="s11">introView</span> <span class="s7">addSubview</span>:titleFrame];</p>
+<p class="p6"><span class="Apple-converted-space">    </span>[<span class="s2"><b>self</b></span>.<span class="s11">introView</span> <span class="s7">addSubview</span>:descriptionFrame];</p>
+<p class="p6"><span class="Apple-converted-space">    </span>[<span class="s2"><b>self</b></span>.<span class="s11">introView</span> <span class="s7">addSubview</span>:instructionsFrame];</p>
+<p class="p6"><span class="Apple-converted-space">    </span>[<span class="s2"><b>self</b></span>.<span class="s11">introView</span> <span class="s7">addSubview</span>:startButtonFrame];</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">    </span></span>// Layout constraints for floating UI elements</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>[</span><span class="s6">NSLayoutConstraint</span><span class="s3"> </span>activateConstraints<span class="s3">:</span><span class="s8">@[</span></p>
+<p class="p6"><span class="Apple-converted-space">                                            </span>[titleFrame.<span class="s7">centerXAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s11">introView</span>.<span class="s7">centerXAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                            </span>[titleFrame.<span class="s7">topAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s11">introView</span>.<span class="s7">topAnchor</span> <span class="s7">constant</span>:<span class="s8">100</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                            </span>[descriptionFrame.<span class="s7">centerXAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s11">introView</span>.<span class="s7">centerXAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                            </span>[descriptionFrame.<span class="s7">topAnchor</span> <span class="s7">constraintEqualToAnchor</span>:titleLabel.<span class="s7">bottomAnchor</span> <span class="s7">constant</span>:<span class="s8">20</span>], <span class="s9">// Corrected constraint</span></p>
+<p class="p6"><span class="Apple-converted-space">                                            </span>[instructionsFrame.<span class="s7">centerXAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s11">introView</span>.<span class="s7">centerXAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                            </span>[instructionsFrame.<span class="s7">topAnchor</span> <span class="s7">constraintEqualToAnchor</span>:descriptionFrame.<span class="s7">bottomAnchor</span> <span class="s7">constant</span>:<span class="s8">30</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                            </span>[startButtonFrame.<span class="s7">centerXAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s11">introView</span>.<span class="s7">centerXAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                            </span>[startButtonFrame.<span class="s7">widthAnchor</span> <span class="s7">constraintEqualToConstant</span>:<span class="s8">200</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                            </span>[startButtonFrame.<span class="s7">heightAnchor</span> <span class="s7">constraintEqualToConstant</span>:<span class="s8">50</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                            </span>[startButtonFrame.<span class="s7">bottomAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s11">introView</span>.<span class="s7">bottomAnchor</span> <span class="s7">constant</span>:-<span class="s8">100</span>]</p>
+<p class="p6"><span class="Apple-converted-space">                                            </span><span class="s8">]</span>];</p>
+<p class="p6">}</p>
+<p class="p2"><br></p>
+<p class="p9"><span class="s3">- (</span><span class="s6">UIView</span><span class="s3"> *)</span>createFloatingFrameForView<span class="s3">:(</span><span class="s6">UIView</span><span class="s3"> *)view {</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s6">UIView</span><span class="s3"> *frame = [[</span><span class="s6">UIView</span><span class="s3"> </span>alloc<span class="s3">] </span>initWithFrame<span class="s3">:</span>CGRectMake<span class="s3">(</span><span class="s8">0</span><span class="s3">, </span><span class="s8">0</span><span class="s3">, view.</span>bounds<span class="s3">.</span>size<span class="s3">.</span>width<span class="s3"> + </span><span class="s8">20</span><span class="s3">, view.</span>bounds<span class="s3">.</span>size<span class="s3">.</span>height<span class="s3"> + </span><span class="s8">20</span><span class="s3">)];</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>frame.</span>layer<span class="s3">.</span>cornerRadius<span class="s3"> = </span><span class="s8">12</span><span class="s3">;</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>frame.</span>layer<span class="s3">.</span>shadowColor<span class="s3"> = [</span><span class="s6">UIColor</span><span class="s3"> </span>blackColor<span class="s3">].</span>CGColor<span class="s3">;</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>frame.</span>layer<span class="s3">.</span>shadowOffset<span class="s3"> = </span>CGSizeMake<span class="s3">(</span><span class="s8">0</span><span class="s3">, </span><span class="s8">4</span><span class="s3">);</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>frame.</span>layer<span class="s3">.</span>shadowOpacity<span class="s3"> = </span><span class="s8">0.8</span><span class="s3">;</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>frame.</span>layer<span class="s3">.</span>shadowRadius<span class="s3"> = </span><span class="s8">6</span><span class="s3">;</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>frame.</span>translatesAutoresizingMaskIntoConstraints<span class="s3"> = </span><span class="s2"><b>NO</b></span><span class="s3">; </span><span class="s9">// Add this line.</span></p>
+<p class="p2"><br></p>
+<p class="p6"><span class="Apple-converted-space">    </span>[frame <span class="s7">addSubview</span>:view];</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">      </span>[</span><span class="s6">NSLayoutConstraint</span><span class="s3"> </span>activateConstraints<span class="s3">:</span><span class="s8">@[</span></p>
+<p class="p6"><span class="Apple-converted-space">                                                  </span>[view.<span class="s7">centerXAnchor</span> <span class="s7">constraintEqualToAnchor</span>:frame.<span class="s7">centerXAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                                  </span>[view.<span class="s7">centerYAnchor</span> <span class="s7">constraintEqualToAnchor</span>:frame.<span class="s7">centerYAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                                  </span><span class="s8">]</span>];</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s2"><b>return</b></span> frame;</p>
+<p class="p6">}</p>
+<p class="p2"><br></p>
+<p class="p6">- (<span class="s6">UILabel</span> *)<span class="s5">createLabelWithText</span>:(<span class="s6">NSString</span> *)text <span class="s5">fontSize</span>:(<span class="s6">CGFloat</span>)size <span class="s5">weight</span>:(<span class="s6">UIFontWeight</span>)weight {</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s6">UILabel</span><span class="s3"> *label = [[</span><span class="s6">UILabel</span><span class="s3"> </span>alloc<span class="s3">] </span>initWithFrame<span class="s3">:</span>CGRectZero<span class="s3">];</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span>label.<span class="s7">text</span> = text;</p>
+<p class="p6"><span class="Apple-converted-space">    </span>label.<span class="s7">font</span> = [<span class="s6">UIFont</span> <span class="s7">systemFontOfSize</span>:size <span class="s7">weight</span>:weight];</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>label.</span>textAlignment<span class="s3"> = </span>NSTextAlignmentCenter<span class="s3">;</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>label.</span>translatesAutoresizingMaskIntoConstraints<span class="s3"> = </span><span class="s2"><b>NO</b></span><span class="s3">;</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>label.</span>textColor<span class="s3"> = [</span><span class="s6">UIColor</span><span class="s3"> </span>whiteColor<span class="s3">];</span></p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">    </span></span>// Add shadow for better contrast</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>label.</span>layer<span class="s3">.</span>shadowColor<span class="s3"> = [</span><span class="s6">UIColor</span><span class="s3"> </span>blackColor<span class="s3">].</span>CGColor<span class="s3">;</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>label.</span>layer<span class="s3">.</span>shadowOffset<span class="s3"> = </span>CGSizeMake<span class="s3">(</span><span class="s8">0</span><span class="s3">, </span><span class="s8">2</span><span class="s3">);</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>label.</span>layer<span class="s3">.</span>shadowOpacity<span class="s3"> = </span><span class="s8">0.7</span><span class="s3">;</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>label.</span>layer<span class="s3">.</span>shadowRadius<span class="s3"> = </span><span class="s8">4</span><span class="s3">;</span></p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s2"><b>return</b></span> label;</p>
+<p class="p6">}</p>
+<p class="p2"><br></p>
+<p class="p9"><span class="s3">- (</span><span class="s6">UIButton</span><span class="s3"> *)</span>createButtonWithTitle<span class="s3">:(</span><span class="s6">NSString</span><span class="s3"> *)title {</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s6">UIButton</span><span class="s3"> *button = [</span><span class="s6">UIButton</span><span class="s3"> </span>buttonWithType<span class="s3">:</span>UIButtonTypeSystem<span class="s3">];</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>[button </span>setTitle<span class="s3">:title </span>forState<span class="s3">:</span>UIControlStateNormal<span class="s3">];</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>button.</span>backgroundColor<span class="s3"> = [</span><span class="s6">UIColor</span><span class="s3"> </span>systemBlueColor<span class="s3">];</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>[button </span>setTitleColor<span class="s3">:[</span><span class="s6">UIColor</span><span class="s3"> </span>whiteColor<span class="s3">] </span>forState<span class="s3">:</span>UIControlStateNormal<span class="s3">];</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>button.</span>layer<span class="s3">.</span>cornerRadius<span class="s3"> = </span><span class="s8">12</span><span class="s3">;</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>button.</span>translatesAutoresizingMaskIntoConstraints<span class="s3"> = </span><span class="s2"><b>NO</b></span><span class="s3">;</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s2"><b>return</b></span> button;</p>
+<p class="p6">}</p>
+<p class="p2"><br></p>
+<p class="p9"><span class="s3">- (</span><span class="s2"><b>void</b></span><span class="s3">)</span>startButtonTapped<span class="s3"> {</span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span>hasShownIntro<span class="s3"> = </span><span class="s2"><b>YES</b></span><span class="s3">;</span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>if</b></span><span class="s3"> (</span><span class="s2"><b>self</b></span><span class="s3">.</span>captureSession<span class="s3">) {</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">        </span></span>dispatch_async<span class="s3">(</span>dispatch_get_global_queue<span class="s3">(</span><span class="s1">DISPATCH_QUEUE_PRIORITY_DEFAULT</span><span class="s3">, </span><span class="s8">0</span><span class="s3">), ^{</span></p>
+<p class="p6"><span class="Apple-converted-space">            </span><span class="s2"><b>if</b></span> (<span class="s2"><b>self</b></span>.<span class="s11">captureSession</span>) {</p>
+<p class="p6"><span class="Apple-converted-space">                </span>[<span class="s2"><b>self</b></span>.<span class="s11">captureSession</span> <span class="s7">stopRunning</span>];</p>
+<p class="p6"><span class="Apple-converted-space">            </span>}</p>
+<p class="p6"><span class="Apple-converted-space">        </span>});</p>
+<p class="p6"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>[</span><span class="s6">UIView</span><span class="s3"> </span>animateWithDuration<span class="s3">:</span><span class="s8">0.5</span><span class="s3"> </span>animations<span class="s3">:^{</span></p>
+<p class="p6"><span class="Apple-converted-space">        </span><span class="s2"><b>self</b></span>.<span class="s11">introView</span>.<span class="s7">alpha</span> = <span class="s8">0.0</span>;</p>
+<p class="p6"><span class="Apple-converted-space">    </span>} <span class="s7">completion</span>:^(<span class="s2"><b>BOOL</b></span> finished) {</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">        </span>[</span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">introView</span><span class="s3"> </span>removeFromSuperview<span class="s3">];</span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">        </span>[</span><span class="s2"><b>self</b></span><span class="s3"> </span>setupMotionManager<span class="s3">];</span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">        </span>[</span><span class="s2"><b>self</b></span><span class="s3"> </span>setupARSession<span class="s3">];</span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">        </span>[</span><span class="s2"><b>self</b></span><span class="s3"> </span>addStatusLabel<span class="s3">];</span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">        </span>[</span><span class="s2"><b>self</b></span><span class="s3"> </span>addCircleOverlayAndBottomBlur<span class="s3">];</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span>}];</p>
+<p class="p6">}</p>
+<p class="p9"><span class="s3">- (</span><span class="s2"><b>void</b></span><span class="s3">) </span>addCircleOverlayAndBottomBlur<span class="s3">{</span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">    </span>[</span><span class="s2"><b>self</b></span><span class="s3"> </span>addCircleOverlay<span class="s3">];</span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">    </span>[</span><span class="s2"><b>self</b></span><span class="s3"> </span>addBottomBlur<span class="s3">];</span></p>
+<p class="p6">}</p>
+<p class="p2"><br></p>
+<p class="p9"><span class="s3">- (</span><span class="s2"><b>void</b></span><span class="s3">)</span>addStatusLabel<span class="s3"> {</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">statusLabel</span><span class="s3"> = [[</span><span class="s6">UILabel</span><span class="s3"> </span>alloc<span class="s3">] </span>initWithFrame<span class="s3">:</span>CGRectMake<span class="s3">(</span><span class="s8">20</span><span class="s3">, </span><span class="s8">40</span><span class="s3">, </span><span class="s2"><b>self</b></span><span class="s3">.</span>view<span class="s3">.</span>bounds<span class="s3">.</span>size<span class="s3">.</span>width<span class="s3"> - </span><span class="s8">40</span><span class="s3">, </span><span class="s8">40</span><span class="s3">)];</span></p>
+<p class="p1"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">statusLabel</span><span class="s3">.</span><span class="s7">text</span><span class="s3"> = </span>@"Move device to detect floor"<span class="s3">;</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">statusLabel</span><span class="s3">.</span>textAlignment<span class="s3"> = </span>NSTextAlignmentCenter<span class="s3">;</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">statusLabel</span><span class="s3">.</span>textColor<span class="s3"> = [</span><span class="s6">UIColor</span><span class="s3"> </span>whiteColor<span class="s3">];</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">statusLabel</span><span class="s3">.</span>backgroundColor<span class="s3"> = [</span><span class="s6">UIColor</span><span class="s3"> </span>colorWithWhite<span class="s3">:</span><span class="s8">0.2</span><span class="s3"> </span>alpha<span class="s3">:</span><span class="s8">0.7</span><span class="s3">];</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">statusLabel</span><span class="s3">.</span>layer<span class="s3">.</span>cornerRadius<span class="s3"> = </span><span class="s8">10</span><span class="s3">;</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">statusLabel</span><span class="s3">.</span>layer<span class="s3">.</span>masksToBounds<span class="s3"> = </span><span class="s2"><b>YES</b></span><span class="s3">;</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">statusLabel</span><span class="s3">.</span>font<span class="s3"> = [</span><span class="s6">UIFont</span><span class="s3"> </span>systemFontOfSize<span class="s3">:</span><span class="s8">14</span><span class="s3"> </span>weight<span class="s3">:</span>UIFontWeightMedium<span class="s3">];</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">statusLabel</span><span class="s3">.</span>translatesAutoresizingMaskIntoConstraints<span class="s3"> = </span><span class="s2"><b>NO</b></span><span class="s3">; </span><span class="s9">// Add this line</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>[</span><span class="s2"><b>self</b></span><span class="s3">.</span>view<span class="s3"> </span>addSubview<span class="s3">:</span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">statusLabel</span><span class="s3">];</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">     </span>[</span><span class="s6">NSLayoutConstraint</span><span class="s3"> </span>activateConstraints<span class="s3">:</span><span class="s8">@[</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">                                                  </span>[</span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">statusLabel</span><span class="s3">.</span>topAnchor<span class="s3"> </span>constraintEqualToAnchor<span class="s3">:</span><span class="s2"><b>self</b></span><span class="s3">.</span>view<span class="s3">.</span>safeAreaLayoutGuide<span class="s3">.</span>topAnchor<span class="s3"> </span>constant<span class="s3">:</span><span class="s8">20</span><span class="s3">], </span><span class="s9">// Example constraint</span></p>
+<p class="p6"><span class="Apple-converted-space">                                                  </span>[<span class="s2"><b>self</b></span>.<span class="s11">statusLabel</span>.<span class="s7">centerXAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s7">view</span>.<span class="s7">centerXAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                                  </span><span class="s8">]</span>];</p>
+<p class="p6">}</p>
+<p class="p2"><br></p>
+<p class="p9"><span class="s3">- (</span><span class="s2"><b>void</b></span><span class="s3">)</span>setupMotionManager<span class="s3"> {</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s2"><b>self</b></span>.<span class="s11">motionManager</span> = [[<span class="s6">CMMotionManager</span> <span class="s7">alloc</span>] <span class="s7">init</span>];</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">motionManager</span><span class="s3">.</span>deviceMotionUpdateInterval<span class="s3"> = </span><span class="s8">0.05</span><span class="s3">;</span></p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>if</b></span><span class="s3"> ([</span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">motionManager</span><span class="s3"> </span>isDeviceMotionAvailable<span class="s3">]) {</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">        </span>[</span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">motionManager</span><span class="s3"> </span>startDeviceMotionUpdatesToQueue<span class="s3">:[</span><span class="s6">NSOperationQueue</span><span class="s3"> </span>mainQueue<span class="s3">]</span></p>
+<p class="p6"><span class="Apple-converted-space">                                                </span><span class="s7">withHandler</span>:^(<span class="s6">CMDeviceMotion</span> *motion, <span class="s6">NSError</span> *error) {</p>
+<p class="p6"><span class="Apple-converted-space">                                                    </span><span class="s2"><b>if</b></span> (error) {</p>
+<p class="p6"><span class="Apple-converted-space">                                                        </span><span class="s7">NSLog</span>(<span class="s12">@"Error getting device motion: %@"</span>, error.<span class="s7">localizedDescription</span>);</p>
+<p class="p6"><span class="Apple-converted-space">                                                        </span><span class="s2"><b>self</b></span>.<span class="s11">deviceAngle</span> = <span class="s8">0.0</span>; <span class="s9">// Or some default value</span></p>
+<p class="p6"><span class="Apple-converted-space">                                                        </span><span class="s2"><b>return</b></span>;</p>
+<p class="p6"><span class="Apple-converted-space">                                                    </span>}</p>
+<p class="p6"><span class="Apple-converted-space">                                                    </span><span class="s2"><b>self</b></span>.<span class="s11">deviceAngle</span> = motion.<span class="s7">attitude</span>.<span class="s7">pitch</span>;</p>
+<p class="p6"><span class="Apple-converted-space">                                                </span>}];</p>
+<p class="p6"><span class="Apple-converted-space">    </span>} <span class="s2"><b>else</b></span> {</p>
+<p class="p1"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s7">NSLog</span><span class="s3">(</span>@"Device motion is not available."<span class="s3">);</span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">deviceAngle</span><span class="s3"> = </span><span class="s8">0.0</span><span class="s3">; </span>// Set a default value</p>
+<p class="p6"><span class="Apple-converted-space">    </span>}</p>
+<p class="p6">}</p>
+<p class="p2"><br></p>
+<p class="p9"><span class="s3">- (</span><span class="s2"><b>void</b></span><span class="s3">)</span>setupARSession<span class="s3"> {</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">arSceneView</span><span class="s3"> = [[</span><span class="s6">ARSCNView</span><span class="s3"> </span>alloc<span class="s3">] </span>initWithFrame<span class="s3">:</span><span class="s2"><b>self</b></span><span class="s3">.</span>view<span class="s3">.</span>bounds<span class="s3">];</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">arSceneView</span><span class="s3">.</span>autoenablesDefaultLighting<span class="s3"> = </span><span class="s2"><b>YES</b></span><span class="s3">;</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">arSceneView</span><span class="s3">.</span>automaticallyUpdatesLighting<span class="s3"> = </span><span class="s2"><b>YES</b></span><span class="s3">;</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">arSceneView</span><span class="s3">.</span>translatesAutoresizingMaskIntoConstraints<span class="s3"> = </span><span class="s2"><b>NO</b></span><span class="s3">; </span><span class="s9">// Add this line</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>[</span><span class="s2"><b>self</b></span><span class="s3">.</span>view<span class="s3"> </span>insertSubview<span class="s3">:</span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">arSceneView</span><span class="s3"> </span>atIndex<span class="s3">:</span><span class="s8">0</span><span class="s3">];</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">     </span>[</span><span class="s6">NSLayoutConstraint</span><span class="s3"> </span>activateConstraints<span class="s3">:</span><span class="s8">@[</span></p>
+<p class="p6"><span class="Apple-converted-space">                                                 </span>[<span class="s2"><b>self</b></span>.<span class="s11">arSceneView</span>.<span class="s7">topAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s7">view</span>.<span class="s7">topAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                                  </span>[<span class="s2"><b>self</b></span>.<span class="s11">arSceneView</span>.<span class="s7">bottomAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s7">view</span>.<span class="s7">bottomAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                                  </span>[<span class="s2"><b>self</b></span>.<span class="s11">arSceneView</span>.<span class="s7">leadingAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s7">view</span>.<span class="s7">leadingAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                                  </span>[<span class="s2"><b>self</b></span>.<span class="s11">arSceneView</span>.<span class="s7">trailingAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s7">view</span>.<span class="s7">trailingAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                                  </span><span class="s8">]</span>];</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span>arSession<span class="s3"> = </span><span class="s2"><b>self</b></span><span class="s3">.</span>arSceneView<span class="s3">.</span><span class="s7">session</span><span class="s3">;</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s2"><b>self</b></span>.<span class="s11">arSession</span>.<span class="s7">delegate</span> = <span class="s2"><b>self</b></span>;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p8"><span class="s3"><span class="Apple-converted-space">    </span></span>ARWorldTrackingConfiguration<span class="s3"> *configuration = [[</span>ARWorldTrackingConfiguration<span class="s3"> </span><span class="s7">alloc</span><span class="s3">] </span><span class="s7">init</span><span class="s3">];</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>configuration.</span>planeDetection<span class="s3"> = </span>ARPlaneAnchorAlignmentHorizontal<span class="s3">;</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>configuration.</span>environmentTexturing<span class="s3"> = </span>AREnvironmentTexturingAutomatic<span class="s3">;</span></p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">    </span></span>// Run the session on the session queue.</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span>dispatch_async<span class="s3">(</span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">sessionQueue</span><span class="s3">, ^{</span></p>
+<p class="p6"><span class="Apple-converted-space">        </span>[<span class="s2"><b>self</b></span>.<span class="s11">arSession</span> <span class="s7">runWithConfiguration</span>:configuration];</p>
+<p class="p6"><span class="Apple-converted-space">    </span>});</p>
+<p class="p6">}</p>
+<p class="p2"><br></p>
+<p class="p6">- (<span class="s2"><b>void</b></span>)<span class="s5">session</span>:(<span class="s6">ARSession</span> *)session <span class="s5">didUpdateFrame</span>:(<span class="s6">ARFrame</span> *)frame {</p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">    </span></span>// Perform AR processing on the session queue.</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span>dispatch_async<span class="s3">(</span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">sessionQueue</span><span class="s3">, ^{</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s6">NSTimeInterval</span><span class="s3"> currentTime = [</span><span class="s6">NSDate</span><span class="s3"> </span>timeIntervalSinceReferenceDate<span class="s3">];</span></p>
+<p class="p6"><span class="Apple-converted-space">        </span><span class="s2"><b>if</b></span> (currentTime - <span class="s2"><b>self</b></span>.<span class="s11">lastUpdateTime</span> &lt; <span class="s8">0.25</span>) <span class="s2"><b>return</b></span>;</p>
+<p class="p6"><span class="Apple-converted-space">        </span><span class="s2"><b>self</b></span>.<span class="s11">lastUpdateTime</span> = currentTime;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p6"><span class="Apple-converted-space">        </span><span class="s6">NSArray</span>&lt;<span class="s6">ARPlaneAnchor</span> *&gt; *planeAnchors = [<span class="s2"><b>self</b></span> <span class="s11">getPlaneAnchors</span>:frame.<span class="s7">anchors</span>];</p>
+<p class="p6"><span class="Apple-converted-space">        </span><span class="s2"><b>if</b></span> (planeAnchors.<span class="s7">count</span> == <span class="s8">0</span>) {</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">            </span></span>dispatch_async<span class="s3">(</span>dispatch_get_main_queue<span class="s3">(), ^{</span></p>
+<p class="p6"><span class="Apple-converted-space">                </span><span class="s2"><b>if</b></span> (!<span class="s2"><b>self</b></span>.<span class="s11">isFloorDetected</span>) {</p>
+<p class="p1"><span class="s3"><span class="Apple-converted-space">                    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">statusLabel</span><span class="s3">.</span><span class="s7">text</span><span class="s3"> = </span>@"Move device and scan the floor."<span class="s3">;</span></p>
+<p class="p6"><span class="Apple-converted-space">                </span>}</p>
+<p class="p6"><span class="Apple-converted-space">            </span>});</p>
+<p class="p6"><span class="Apple-converted-space">            </span><span class="s2"><b>return</b></span>;</p>
+<p class="p6"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p6"><span class="Apple-converted-space">        </span><span class="s6">ARPlaneAnchor</span> *floorPlane = [<span class="s2"><b>self</b></span> <span class="s11">findFloorPlane</span>:planeAnchors];</p>
+<p class="p6"><span class="Apple-converted-space">        </span><span class="s2"><b>if</b></span> (!floorPlane) <span class="s2"><b>return</b></span>;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">        </span></span>dispatch_async<span class="s3">(</span>dispatch_get_main_queue<span class="s3">(), ^{</span></p>
+<p class="p1"><span class="s3"><span class="Apple-converted-space">            </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">statusLabel</span><span class="s3">.</span><span class="s7">text</span><span class="s3"> = </span>@"Floor detected! Hold device steady."<span class="s3">;</span></p>
+<p class="p6"><span class="Apple-converted-space">            </span><span class="s2"><b>self</b></span>.<span class="s11">isFloorDetected</span> = <span class="s2"><b>YES</b></span>;</p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">            </span>[</span><span class="s2"><b>self</b></span><span class="s3"> </span>updateFloorBlurWithFloorPosition<span class="s3">:floorPlane];</span></p>
+<p class="p6"><span class="Apple-converted-space">        </span>});</p>
+<p class="p6"><span class="Apple-converted-space">    </span>});</p>
+<p class="p6">}</p>
+<p class="p2"><br></p>
+<p class="p8"><span class="s3">- (</span>NSArray<span class="s3">&lt;</span>ARPlaneAnchor<span class="s3"> *&gt; *)</span><span class="s5">getPlaneAnchors</span><span class="s3">:(</span>NSArray<span class="s3">&lt;</span>ARAnchor<span class="s3"> *&gt; *)anchors {</span></p>
+<p class="p8"><span class="s3"><span class="Apple-converted-space">    </span></span>NSMutableArray<span class="s3">&lt;</span>ARPlaneAnchor<span class="s3"> *&gt; *planeAnchors = [</span>NSMutableArray<span class="s3"> </span><span class="s7">array</span><span class="s3">];</span></p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s2"><b>for</b></span> (<span class="s6">ARAnchor</span> *anchor <span class="s2"><b>in</b></span> anchors) {</p>
+<p class="p6"><span class="Apple-converted-space">        </span><span class="s2"><b>if</b></span> ([anchor <span class="s7">isKindOfClass</span>:[<span class="s6">ARPlaneAnchor</span> <span class="s7">class</span>]]) {</p>
+<p class="p6"><span class="Apple-converted-space">            </span><span class="s6">ARPlaneAnchor</span> *planeAnchor = (<span class="s6">ARPlaneAnchor</span> *)anchor;</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">            </span></span><span class="s2"><b>if</b></span><span class="s3"> (planeAnchor.</span>alignment<span class="s3"> == </span>ARPlaneAnchorAlignmentHorizontal<span class="s3">) {</span></p>
+<p class="p6"><span class="Apple-converted-space">                </span>[planeAnchors <span class="s7">addObject</span>:planeAnchor];</p>
+<p class="p6"><span class="Apple-converted-space">            </span>}</p>
+<p class="p6"><span class="Apple-converted-space">        </span>}</p>
+<p class="p6"><span class="Apple-converted-space">    </span>}</p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s2"><b>return</b></span> planeAnchors;</p>
+<p class="p6">}</p>
+<p class="p2"><br></p>
+<p class="p8"><span class="s3">- (</span>ARPlaneAnchor<span class="s3"> *)</span><span class="s5">findFloorPlane</span><span class="s3">:(</span>NSArray<span class="s3">&lt;</span>ARPlaneAnchor<span class="s3"> *&gt; *)planeAnchors {</span></p>
+<p class="p8"><span class="s3"><span class="Apple-converted-space">    </span></span>NSArray<span class="s3">&lt;</span>ARPlaneAnchor<span class="s3"> *&gt; *sortedPlanes = [planeAnchors </span><span class="s7">sortedArrayUsingComparator</span><span class="s3">:^</span>NSComparisonResult<span class="s3">(</span>ARPlaneAnchor<span class="s3"> *a, </span>ARPlaneAnchor<span class="s3"> *b) {</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s2"><b>return</b></span><span class="s3"> (a.</span>transform<span class="s3">.</span>columns<span class="s3">[</span><span class="s8">3</span><span class="s3">].y &gt; b.</span>transform<span class="s3">.</span>columns<span class="s3">[</span><span class="s8">3</span><span class="s3">].y) ? </span>NSOrderedDescending<span class="s3"> : </span>NSOrderedAscending<span class="s3">;</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span>}];</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s6">ARPlaneAnchor</span> *largestLowPlane = <span class="s2"><b>nil</b></span>;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s2"><b>if</b></span> (sortedPlanes.<span class="s7">count</span> &gt; <span class="s8">0</span>) {</p>
+<p class="p6"><span class="Apple-converted-space">        </span>largestLowPlane = [sortedPlanes <span class="s7">firstObject</span>];</p>
+<p class="p6"><span class="Apple-converted-space">    </span>}</p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s2"><b>return</b></span> largestLowPlane;</p>
+<p class="p6">}</p>
+<p class="p2"><br></p>
+<p class="p9"><span class="s3">- (</span><span class="s2"><b>void</b></span><span class="s3">)</span>updateFloorBlurWithFloorPosition<span class="s3">:(</span><span class="s6">ARPlaneAnchor</span><span class="s3"> *)floorPlane {</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s6">CGFloat</span> smoothedFloorY = [<span class="s2"><b>self</b></span> <span class="s11">getSmoothedFloorPosition</span>];</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s6">CGFloat</span> screenHeight = <span class="s2"><b>self</b></span>.<span class="s7">view</span>.<span class="s7">bounds</span>.<span class="s7">size</span>.<span class="s7">height</span>;</p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s6">CGFloat</span> screenWidth = <span class="s2"><b>self</b></span>.<span class="s7">view</span>.<span class="s7">bounds</span>.<span class="s7">size</span>.<span class="s7">width</span>;</p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s6">CGRect</span> floorRect = <span class="s7">CGRectMake</span>(<span class="s8">0</span>, smoothedFloorY, screenWidth, screenHeight - smoothedFloorY);</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>if</b></span><span class="s3"> (!</span><span class="s2"><b>self</b></span><span class="s3">.</span>floorBlurView<span class="s3">) {</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s6">UIBlurEffect</span><span class="s3"> *blurEffect = [</span><span class="s6">UIBlurEffect</span><span class="s3"> </span>effectWithStyle<span class="s3">:</span>UIBlurEffectStyleExtraLight<span class="s3">];</span></p>
+<p class="p6"><span class="Apple-converted-space">        </span><span class="s2"><b>self</b></span>.<span class="s11">floorBlurView</span> = [[<span class="s6">UIVisualEffectView</span> <span class="s7">alloc</span>] <span class="s7">initWithEffect</span>:blurEffect];</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">floorBlurView</span><span class="s3">.</span>translatesAutoresizingMaskIntoConstraints<span class="s3"> = </span><span class="s2"><b>NO</b></span><span class="s3">; </span><span class="s9">// Add this line</span></p>
+<p class="p6"><span class="Apple-converted-space">        </span>[<span class="s2"><b>self</b></span>.<span class="s7">view</span> <span class="s7">addSubview</span>:<span class="s2"><b>self</b></span>.<span class="s11">floorBlurView</span>];</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">         </span>[</span><span class="s6">NSLayoutConstraint</span><span class="s3"> </span>activateConstraints<span class="s3">:</span><span class="s8">@[</span></p>
+<p class="p6"><span class="Apple-converted-space">                                                      </span>[<span class="s2"><b>self</b></span>.<span class="s11">floorBlurView</span>.<span class="s7">topAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s7">view</span>.<span class="s7">topAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                                      </span>[<span class="s2"><b>self</b></span>.<span class="s11">floorBlurView</span>.<span class="s7">bottomAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s7">view</span>.<span class="s7">bottomAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                                      </span>[<span class="s2"><b>self</b></span>.<span class="s11">floorBlurView</span>.<span class="s7">leadingAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s7">view</span>.<span class="s7">leadingAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                                      </span>[<span class="s2"><b>self</b></span>.<span class="s11">floorBlurView</span>.<span class="s7">trailingAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s7">view</span>.<span class="s7">trailingAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                                      </span><span class="s8">]</span>];</p>
+<p class="p6"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>[</span><span class="s6">UIView</span><span class="s3"> </span>animateWithDuration<span class="s3">:</span><span class="s8">0.3</span><span class="s3"> </span>delay<span class="s3">:</span><span class="s8">0</span><span class="s3"> </span>options<span class="s3">:</span>UIViewAnimationOptionBeginFromCurrentState<span class="s3"> </span>animations<span class="s3">:^{</span></p>
+<p class="p6"><span class="Apple-converted-space">        </span><span class="s2"><b>self</b></span>.<span class="s11">floorBlurView</span>.<span class="s7">frame</span> = floorRect;</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span>} </span>completion<span class="s3">:</span><span class="s2"><b>nil</b></span><span class="s3">];</span></p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">     </span></span><span class="s2"><b>if</b></span><span class="s3"> (!</span><span class="s2"><b>self</b></span><span class="s3">.</span>isFloorPlaneAdded<span class="s3">) {</span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">        </span>[</span><span class="s2"><b>self</b></span><span class="s3"> </span>addFloorPlaneVisualization<span class="s3">:floorPlane];</span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s2"><b>self</b></span><span class="s3">.</span>isFloorPlaneAdded<span class="s3"> = </span><span class="s2"><b>YES</b></span><span class="s3">;</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span>} <span class="s2"><b>else</b></span> {</p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">        </span>[</span><span class="s2"><b>self</b></span><span class="s3"> </span>updateFloorPlaneVisualization<span class="s3">:floorPlane];</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span>}</p>
+<p class="p6">}</p>
+<p class="p2"><br></p>
+<p class="p9"><span class="s3">- (</span><span class="s6">CGFloat</span><span class="s3">)</span>getSmoothedFloorPosition<span class="s3"> {</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s6">CGFloat</span> smoothingFactor = <span class="s8">0.1</span>;</p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s6">CGFloat</span> smoothedFloorY = <span class="s2"><b>self</b></span>.<span class="s11">previousFloorPositions</span>.<span class="s7">lastObject</span>.<span class="s7">floatValue</span>;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>if</b></span><span class="s3"> (</span><span class="s2"><b>self</b></span><span class="s3">.</span>previousFloorPositions<span class="s3">.</span><span class="s7">count</span><span class="s3"> &gt; </span><span class="s8">0</span><span class="s3">) {</span></p>
+<p class="p6"><span class="Apple-converted-space">        </span><span class="s6">CGFloat</span> currentFloorY = [<span class="s2"><b>self</b></span>.<span class="s11">previousFloorPositions</span>.<span class="s7">lastObject</span> <span class="s7">floatValue</span>];</p>
+<p class="p6"><span class="Apple-converted-space">        </span>smoothedFloorY = smoothingFactor * currentFloorY + (<span class="s8">1</span> - smoothingFactor) * smoothedFloorY;</p>
+<p class="p6"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s6">CGFloat</span> screenHeight = <span class="s2"><b>self</b></span>.<span class="s7">view</span>.<span class="s7">bounds</span>.<span class="s7">size</span>.<span class="s7">height</span>;</p>
+<p class="p6"><span class="Apple-converted-space">    </span>smoothedFloorY = <span class="s1">MIN</span>(<span class="s1">MAX</span>(smoothedFloorY, screenHeight * <span class="s8">0.3</span>), screenHeight * <span class="s8">0.9</span>);</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>if</b></span><span class="s3"> (</span><span class="s2"><b>self</b></span><span class="s3">.</span>previousFloorPositions<span class="s3">.</span><span class="s7">count</span><span class="s3"> &gt;= </span><span class="s8">10</span><span class="s3">) {</span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">        </span>[</span><span class="s2"><b>self</b></span><span class="s3">.</span>previousFloorPositions<span class="s3"> </span><span class="s7">removeObjectAtIndex</span><span class="s3">:</span><span class="s8">0</span><span class="s3">];</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span>}</p>
+<p class="p6"><span class="Apple-converted-space">    </span>[<span class="s2"><b>self</b></span>.<span class="s11">previousFloorPositions</span> <span class="s7">addObject</span>:<span class="s8">@(</span>smoothedFloorY<span class="s8">)</span>];</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s2"><b>return</b></span> smoothedFloorY;</p>
+<p class="p6">}</p>
+<p class="p2"><br></p>
+<p class="p9"><span class="s3">- (</span><span class="s2"><b>void</b></span><span class="s3">)</span>addCircleOverlay<span class="s3"> {</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s2"><b>static</b></span> <span class="s6">dispatch_once_t</span> onceToken;</p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s1">dispatch_once</span>(&amp;onceToken, ^{</p>
+<p class="p6"><span class="Apple-converted-space">        </span><span class="s2"><b>self</b></span>.<span class="s11">circleView</span> = [[<span class="s10">CircleView</span> <span class="s7">alloc</span>] <span class="s7">initWithFrame</span>:<span class="s7">CGRectMake</span>(<span class="s8">0</span>, <span class="s8">0</span>, <span class="s8">100</span>, <span class="s8">100</span>)];</p>
+<p class="p6"><span class="Apple-converted-space">        </span><span class="s2"><b>self</b></span>.<span class="s11">circleView</span>.<span class="s7">center</span> = <span class="s2"><b>self</b></span>.<span class="s7">view</span>.<span class="s7">center</span>;</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">circleView</span><span class="s3">.</span>translatesAutoresizingMaskIntoConstraints<span class="s3"> = </span><span class="s2"><b>YES</b></span><span class="s3">;</span></p>
+<p class="p6"><span class="Apple-converted-space">        </span>[<span class="s2"><b>self</b></span>.<span class="s7">view</span> <span class="s7">addSubview</span>:<span class="s2"><b>self</b></span>.<span class="s11">circleView</span>];</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">         </span>[</span><span class="s6">NSLayoutConstraint</span><span class="s3"> </span>activateConstraints<span class="s3">:</span><span class="s8">@[</span></p>
+<p class="p6"><span class="Apple-converted-space">                                                       </span>[<span class="s2"><b>self</b></span>.<span class="s11">circleView</span>.<span class="s7">centerXAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s7">view</span>.<span class="s7">centerXAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                                       </span>[<span class="s2"><b>self</b></span>.<span class="s11">circleView</span>.<span class="s7">centerYAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s7">view</span>.<span class="s7">centerYAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                                       </span>[<span class="s2"><b>self</b></span>.<span class="s11">circleView</span>.<span class="s7">widthAnchor</span> <span class="s7">constraintEqualToConstant</span>:<span class="s8">100</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                                       </span>[<span class="s2"><b>self</b></span>.<span class="s11">circleView</span>.<span class="s7">heightAnchor</span> <span class="s7">constraintEqualToConstant</span>:<span class="s8">100</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                                       </span><span class="s8">]</span>];</p>
+<p class="p6"><span class="Apple-converted-space">    </span>});</p>
+<p class="p6">}</p>
+<p class="p2"><br></p>
+<p class="p9"><span class="s3">- (</span><span class="s2"><b>void</b></span><span class="s3">)</span>addBottomBlur<span class="s3"> {</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s2"><b>static</b></span> <span class="s6">dispatch_once_t</span> onceToken;</p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s1">dispatch_once</span>(&amp;onceToken, ^{</p>
+<p class="p6"><span class="Apple-converted-space">        </span><span class="s6">CGFloat</span> height = <span class="s8">200</span>;</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">bottomBlurView</span><span class="s3"> = [[</span><span class="s6">UIVisualEffectView</span><span class="s3"> </span>alloc<span class="s3">] </span>initWithEffect<span class="s3">:[</span><span class="s6">UIBlurEffect</span><span class="s3"> </span>effectWithStyle<span class="s3">:</span>UIBlurEffectStyleExtraLight<span class="s3">]];</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">bottomBlurView</span><span class="s3">.</span>frame<span class="s3"> = </span>CGRectMake<span class="s3">(</span><span class="s8">0</span><span class="s3">, </span><span class="s2"><b>self</b></span><span class="s3">.</span>view<span class="s3">.</span>bounds<span class="s3">.</span>size<span class="s3">.</span>height<span class="s3"> - height, </span><span class="s2"><b>self</b></span><span class="s3">.</span>view<span class="s3">.</span>bounds<span class="s3">.</span>size<span class="s3">.</span>width<span class="s3">, height);</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">bottomBlurView</span><span class="s3">.</span>translatesAutoresizingMaskIntoConstraints<span class="s3"> = </span><span class="s2"><b>YES</b></span><span class="s3">;</span></p>
+<p class="p6"><span class="Apple-converted-space">        </span>[<span class="s2"><b>self</b></span>.<span class="s7">view</span> <span class="s7">addSubview</span>:<span class="s2"><b>self</b></span>.<span class="s11">bottomBlurView</span>];</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">         </span>[</span><span class="s6">NSLayoutConstraint</span><span class="s3"> </span>activateConstraints<span class="s3">:</span><span class="s8">@[</span></p>
+<p class="p6"><span class="Apple-converted-space">                                                      </span>[<span class="s2"><b>self</b></span>.<span class="s11">bottomBlurView</span>.<span class="s7">bottomAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s7">view</span>.<span class="s7">bottomAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                                      </span>[<span class="s2"><b>self</b></span>.<span class="s11">bottomBlurView</span>.<span class="s7">leadingAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s7">view</span>.<span class="s7">leadingAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                                      </span>[<span class="s2"><b>self</b></span>.<span class="s11">bottomBlurView</span>.<span class="s7">trailingAnchor</span> <span class="s7">constraintEqualToAnchor</span>:<span class="s2"><b>self</b></span>.<span class="s7">view</span>.<span class="s7">trailingAnchor</span>],</p>
+<p class="p6"><span class="Apple-converted-space">                                                      </span>[<span class="s2"><b>self</b></span>.<span class="s11">bottomBlurView</span>.<span class="s7">heightAnchor</span> <span class="s7">constraintEqualToConstant</span>:height],</p>
+<p class="p6"><span class="Apple-converted-space">                                                      </span><span class="s8">]</span>];</p>
+<p class="p6"><span class="Apple-converted-space">    </span>});</p>
+<p class="p6">}</p>
+<p class="p2"><br></p>
+<p class="p9"><span class="s3">- (</span><span class="s2"><b>void</b></span><span class="s3">)</span>addFloorPlaneVisualization<span class="s3">:(</span><span class="s6">ARPlaneAnchor</span><span class="s3"> *)planeAnchor {</span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">    </span></span>// Use the plane anchor's geometry, or create a new plane.</p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">     </span></span><span class="s2"><b>if</b></span><span class="s3"> (!</span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">planeGeometry</span><span class="s3">) { </span>// Create it only once</p>
+<p class="p6"><span class="Apple-converted-space">         </span><span class="s2"><b>if</b></span> (<span class="s2"><b>@available</b></span>(iOS <span class="s8">17.0</span>, *)) {</p>
+<p class="p6"><span class="Apple-converted-space">             </span><span class="s2"><b>self</b></span>.<span class="s11">planeGeometry</span> = [<span class="s6">SCNPlane</span> <span class="s7">planeWithWidth</span>:planeAnchor.<span class="s7">extent</span>.x <span class="s7">height</span>:planeAnchor.<span class="s7">extent</span>.z];</p>
+<p class="p6"><span class="Apple-converted-space">         </span>} <span class="s2"><b>else</b></span> {</p>
+<p class="p6"><span class="Apple-converted-space">             </span><span class="s2"><b>self</b></span>.<span class="s11">planeGeometry</span> = [<span class="s6">SCNPlane</span> planeWithWidth:planeAnchor.<span class="s7">extent</span>.x length:planeAnchor.<span class="s7">extent</span>.z];</p>
+<p class="p6"><span class="Apple-converted-space">         </span>}</p>
+<p class="p6"><span class="Apple-converted-space">     </span>} <span class="s2"><b>else</b></span> {</p>
+<p class="p6"><span class="Apple-converted-space">          </span><span class="s2"><b>if</b></span> (<span class="s2"><b>@available</b></span>(iOS <span class="s8">17.0</span>, *)) {</p>
+<p class="p6"><span class="Apple-converted-space">             </span><span class="s2"><b>self</b></span>.<span class="s11">planeGeometry</span>.<span class="s7">width</span> = planeAnchor.<span class="s7">extent</span>.x;</p>
+<p class="p6"><span class="Apple-converted-space">             </span><span class="s2"><b>self</b></span>.<span class="s11">planeGeometry</span>.<span class="s7">height</span> = planeAnchor.<span class="s7">extent</span>.z;</p>
+<p class="p6"><span class="Apple-converted-space">         </span>} <span class="s2"><b>else</b></span> {</p>
+<p class="p6"><span class="Apple-converted-space">             </span><span class="s2"><b>self</b></span>.<span class="s11">planeGeometry</span>.<span class="s7">width</span> = planeAnchor.<span class="s7">extent</span>.x;</p>
+<p class="p6"><span class="Apple-converted-space">             </span><span class="s2"><b>self</b></span>.<span class="s11">planeGeometry</span>.length = planeAnchor.<span class="s7">extent</span>.z;</p>
+<p class="p6"><span class="Apple-converted-space">         </span>}</p>
+<p class="p6"><span class="Apple-converted-space">     </span>}</p>
+<p class="p2"><span class="Apple-converted-space">   </span></p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">    </span></span>// Create a material for the plane.<span class="Apple-converted-space">  </span>Use a subtle color.</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">planeGeometry</span><span class="s3">.</span>firstMaterial<span class="s3">.</span>diffuse<span class="s3">.</span>contents<span class="s3"> = [</span><span class="s6">UIColor</span><span class="s3"> </span>colorWithWhite<span class="s3">:</span><span class="s8">0.5</span><span class="s3"> </span>alpha<span class="s3">:</span><span class="s8">0.5</span><span class="s3">]; </span><span class="s9">// Semi-transparent gray</span></p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">    </span></span>// Create a node to hold the plane geometry.</p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s2"><b>if</b></span> (!<span class="s2"><b>self</b></span>.<span class="s11">floorNode</span>) {</p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s2"><b>self</b></span><span class="s3">.</span>floorNode<span class="s3"> = [</span><span class="s6">SCNNode</span><span class="s3"> </span><span class="s7">nodeWithGeometry</span><span class="s3">:</span><span class="s2"><b>self</b></span><span class="s3">.</span>planeGeometry<span class="s3">];</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">floorNode</span><span class="s3">.</span>transform<span class="s3"> = </span>SCNMatrix4FromMat4<span class="s3">(planeAnchor.</span>transform<span class="s3">);</span></p>
+<p class="p6"><span class="Apple-converted-space">        </span><span class="s2"><b>self</b></span>.<span class="s11">floorNode</span>.<span class="s7">eulerAngles</span>.<span class="s7">x</span> = -<span class="s1">M_PI_2</span>;</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">        </span>[</span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">arSceneView</span><span class="s3">.</span>scene<span class="s3">.</span>rootNode<span class="s3"> </span>addChildNode<span class="s3">:</span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">floorNode</span><span class="s3">];</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span>} <span class="s2"><b>else</b></span> {</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">floorNode</span><span class="s3">.</span>transform<span class="s3"> = </span>SCNMatrix4FromMat4<span class="s3">(planeAnchor.</span>transform<span class="s3">);</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span>}</p>
+<p class="p6">}</p>
+<p class="p2"><br></p>
+<p class="p9"><span class="s3">- (</span><span class="s2"><b>void</b></span><span class="s3">)</span>updateFloorPlaneVisualization<span class="s3">:(</span><span class="s6">ARPlaneAnchor</span><span class="s3"> *)planeAnchor {</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span><span class="s2"><b>if</b></span> (<span class="s2"><b>self</b></span>.<span class="s11">floorNode</span>) {</p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">        </span></span>// Update the plane's geometry</p>
+<p class="p6"><span class="Apple-converted-space">       </span><span class="s2"><b>if</b></span> (<span class="s2"><b>@available</b></span>(iOS <span class="s8">17.0</span>, *)) {</p>
+<p class="p6"><span class="Apple-converted-space">             </span><span class="s2"><b>self</b></span>.<span class="s11">planeGeometry</span>.<span class="s7">width</span> = planeAnchor.<span class="s7">extent</span>.x;</p>
+<p class="p6"><span class="Apple-converted-space">             </span><span class="s2"><b>self</b></span>.<span class="s11">planeGeometry</span>.<span class="s7">height</span> = planeAnchor.<span class="s7">extent</span>.z;</p>
+<p class="p6"><span class="Apple-converted-space">         </span>} <span class="s2"><b>else</b></span> {</p>
+<p class="p6"><span class="Apple-converted-space">              </span><span class="s2"><b>self</b></span>.<span class="s11">planeGeometry</span>.<span class="s7">width</span> = planeAnchor.<span class="s7">extent</span>.x;</p>
+<p class="p6"><span class="Apple-converted-space">             </span><span class="s2"><b>self</b></span>.<span class="s11">planeGeometry</span>.length = planeAnchor.<span class="s7">extent</span>.z;</p>
+<p class="p6"><span class="Apple-converted-space">         </span>}</p>
+<p class="p2"><br></p>
+<p class="p3"><span class="s3"><span class="Apple-converted-space">        </span></span>// Update the node's transform</p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">floorNode</span><span class="s3">.</span>transform<span class="s3"> = </span>SCNMatrix4FromMat4<span class="s3">(planeAnchor.</span>transform<span class="s3">);</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span>}</p>
+<p class="p6">}</p>
+<p class="p2"><br></p>
+<p class="p9"><span class="s3">- (</span><span class="s2"><b>void</b></span><span class="s3">)</span>dealloc<span class="s3"> {</span></p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>if</b></span><span class="s3"> (</span><span class="s2"><b>self</b></span><span class="s3">.</span>captureSession<span class="s3">) {</span></p>
+<p class="p7"><span class="s3"><span class="Apple-converted-space">        </span></span>dispatch_async<span class="s3">(</span>dispatch_get_global_queue<span class="s3">(</span><span class="s1">DISPATCH_QUEUE_PRIORITY_DEFAULT</span><span class="s3">, </span><span class="s8">0</span><span class="s3">), ^{</span></p>
+<p class="p6"><span class="Apple-converted-space">            </span><span class="s2"><b>if</b></span> (<span class="s2"><b>self</b></span>.<span class="s11">captureSession</span>){</p>
+<p class="p6"><span class="Apple-converted-space">               </span>[<span class="s2"><b>self</b></span>.<span class="s11">captureSession</span> <span class="s7">stopRunning</span>];</p>
+<p class="p6"><span class="Apple-converted-space">            </span>}</p>
+<p class="p6"><span class="Apple-converted-space">        </span>});</p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">        </span></span><span class="s2"><b>self</b></span><span class="s3">.</span>captureSession<span class="s3"> = </span><span class="s2"><b>nil</b></span><span class="s3">;</span></p>
+<p class="p6"><span class="Apple-converted-space">    </span>}</p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">    </span></span><span class="s2"><b>if</b></span><span class="s3"> (</span><span class="s2"><b>self</b></span><span class="s3">.</span>sessionQueue<span class="s3">) {</span></p>
+<p class="p11"><span class="s3"><span class="Apple-converted-space">        </span></span>dispatch_release<span class="s3">(</span><span class="s2"><b>self</b></span><span class="s3">.</span><span class="s11">sessionQueue</span><span class="s3">);</span></p>
+<p class="p6"><span class="Apple-converted-space">        </span><span class="s2"><b>self</b></span>.<span class="s11">sessionQueue</span> = <span class="s2"><b>nil</b></span>;</p>
+<p class="p6"><span class="Apple-converted-space">    </span>}</p>
+<p class="p10"><span class="s3"><span class="Apple-converted-space">     </span></span><span class="s2"><b>if</b></span><span class="s3"> (</span><span class="s2"><b>self</b></span><span class="s3">.</span>previewLayer<span class="s3">) {</span></p>
+<p class="p6"><span class="Apple-converted-space">          </span><span class="s2"><b>self</b></span>.<span class="s11">previewLayer</span>.<span class="s7">session</span> = <span class="s2"><b>nil</b></span>;</p>
+<p class="p6"><span class="Apple-converted-space">          </span><span class="s2"><b>self</b></span>.<span class="s11">previewLayer</span> = <span class="s2"><b>nil</b></span>;</p>
+<p class="p6"><span class="Apple-converted-space">      </span>}</p>
+<p class="p6">}</p>
+<p class="p2"><br></p>
+<p class="p5"><b>@end</b><b></b></p>
+</body>
+</html>

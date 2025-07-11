@@ -1,0 +1,68 @@
+#import "ViewController.h"
+#import <AVFoundation/AVFoundation.h>
+#import "CircleView.h"
+
+@interface ViewController ()
+@property (nonatomic, strong) AVCaptureSession *session;
+@property (nonatomic, strong) AVCaptureVideoPreviewLayer *previewLayer;
+@end
+
+@implementation ViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    [self setupCamera];    // Start the camera
+    [self addCircleOverlay];  // Add frosted glass circle
+    [self addBottomBlur];  // Add bottom blur effect
+}
+
+- (void)setupCamera {
+    self.session = [[AVCaptureSession alloc] init];
+    self.session.sessionPreset = AVCaptureSessionPresetHigh;
+    
+    AVCaptureDevice *camera = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    NSError *error = nil;
+    AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:camera error:&error];
+    
+    if (error) {
+        NSLog(@"Error accessing camera: %@", error.localizedDescription);
+        return;
+    }
+    
+    if ([self.session canAddInput:input]) {
+        [self.session addInput:input];
+    }
+    
+    self.previewLayer = [AVCaptureVideoPreviewLayer layerWithSession:self.session];
+    self.previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
+    self.previewLayer.frame = self.view.bounds;
+    [self.view.layer addSublayer:self.previewLayer];
+    
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        [self.session startRunning];
+    });
+}
+
+- (void)addCircleOverlay {
+    CGFloat circleSize = 100.0;
+    CGRect circleFrame = CGRectMake(0, 0, circleSize, circleSize);
+    
+    CircleView *circleView = [[CircleView alloc] initWithFrame:circleFrame];
+    circleView.center = self.view.center;
+    
+    [self.view addSubview:circleView];
+}
+
+- (void)addBottomBlur {
+    CGFloat height = 200.0; // Height of the frosted glass effect at the bottom
+    CGRect blurFrame = CGRectMake(0, self.view.frame.size.height - height, self.view.frame.size.width, height);
+    
+    UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleLight];
+    UIVisualEffectView *blurView = [[UIVisualEffectView alloc] initWithEffect:blurEffect];
+    blurView.frame = blurFrame;
+    
+    [self.view addSubview:blurView];
+}
+
+@end

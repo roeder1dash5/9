@@ -1,0 +1,2692 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2761
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;\f1\fnil\fcharset0 Menlo-Bold;}
+{\colortbl;\red255\green255\blue255;\red100\green56\blue32;\red255\green255\blue255;\red196\green26\blue22;
+\red93\green108\blue121;\red0\green0\blue0;\red74\green85\blue96;\red155\green35\blue147;\red28\green70\blue74;
+\red57\green0\blue160;\red15\green104\blue160;\red11\green79\blue121;\red108\green54\blue169;\red50\green109\blue116;
+\red28\green0\blue207;}
+{\*\expandedcolortbl;;\csgenericrgb\c39147\c22031\c12446;\csgenericrgb\c100000\c100000\c100000;\csgenericrgb\c77000\c10200\c8600;
+\csgenericrgb\c36526\c42188\c47515;\csgenericrgb\c0\c0\c0\c85000;\csgenericrgb\c29020\c33333\c37647;\csgenericrgb\c60759\c13753\c57628;\csgenericrgb\c10981\c27276\c28869;
+\csgenericrgb\c22454\c0\c62803;\csgenericrgb\c5882\c40784\c62745;\csgenericrgb\c4314\c30980\c47451;\csgenericrgb\c42190\c21278\c66379;\csgenericrgb\c19418\c42935\c45455;
+\csgenericrgb\c11000\c0\c81000;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww20220\viewh16160\viewkind0
+\deftab593
+\pard\tx593\pardeftab593\partightenfactor0
+
+\f0\fs24 \cf2 \cb3 #import \cf4 "ViewController.h"\cf2  \cf5 // Assumes ViewController.h defines CalibrationState enum\cf6 \
+\cf2 #import \cf4 <AVFoundation/AVFoundation.h>\cf6 \
+\cf2 #import \cf4 <Vision/Vision.h>\cf6 \
+\cf2 #import \cf4 <CoreMotion/CoreMotion.h>\cf6 \
+\cf2 #import \cf4 <UIKit/UIKit.h>\cf6 \
+\
+\cf2 #pragma mark 
+\f1\b \cf7 - Class Extension (Private Interface)
+\f0\b0 \cf6 \
+\
+
+\f1\b \cf8 @interface
+\f0\b0 \cf6  \cf9 ViewController\cf6  () <\cf10 AVCaptureVideoDataOutputSampleBufferDelegate\cf6 >\
+\
+
+\f1\b \cf8 @property
+\f0\b0 \cf6  (
+\f1\b \cf8 nonatomic
+\f0\b0 \cf6 , 
+\f1\b \cf8 strong
+\f0\b0 \cf6 ) \cf10 UIView\cf6  *\cf11 previewContainerView\cf6 ;\
+\
+\cf5 // AVFoundation Properties\cf6 \
+
+\f1\b \cf8 @property
+\f0\b0 \cf6  (
+\f1\b \cf8 nonatomic
+\f0\b0 \cf6 , 
+\f1\b \cf8 strong
+\f0\b0 \cf6 ) \cf10 AVCaptureSession\cf6           *\cf11 session\cf6 ;\
+
+\f1\b \cf8 @property
+\f0\b0 \cf6  (
+\f1\b \cf8 nonatomic
+\f0\b0 \cf6 , 
+\f1\b \cf8 strong
+\f0\b0 \cf6 ) \cf10 AVCaptureVideoPreviewLayer\cf6  *\cf11 previewLayer\cf6 ;\
+
+\f1\b \cf8 @property
+\f0\b0 \cf6  (
+\f1\b \cf8 nonatomic
+\f0\b0 \cf6 , 
+\f1\b \cf8 strong
+\f0\b0 \cf6 ) \cf10 AVCaptureVideoDataOutput\cf6   *\cf11 videoDataOutput\cf6 ;\
+\
+\cf5 // CoreMotion Properties\cf6 \
+
+\f1\b \cf8 @property
+\f0\b0 \cf6  (
+\f1\b \cf8 nonatomic
+\f0\b0 \cf6 , 
+\f1\b \cf8 strong
+\f0\b0 \cf6 ) \cf10 CMMotionManager\cf6            *\cf11 motionManager\cf6 ;\
+\
+\cf5 // Vision Properties\cf6 \
+
+\f1\b \cf8 @property
+\f0\b0 \cf6  (
+\f1\b \cf8 nonatomic
+\f0\b0 \cf6 , 
+\f1\b \cf8 strong
+\f0\b0 \cf6 ) \cf10 VNDetectHorizonRequest\cf6     *\cf11 horizonRequest\cf6 ;\
+
+\f1\b \cf8 @property
+\f0\b0 \cf6  (
+\f1\b \cf8 nonatomic
+\f0\b0 \cf6 , 
+\f1\b \cf8 strong
+\f0\b0 \cf6 ) \cf10 dispatch_queue_t\cf6           \cf11 visionQueue\cf6 ; \cf5 // Serial queue for Vision processing\cf6 \
+\
+\cf5 // UI Elements\cf6 \
+
+\f1\b \cf8 @property
+\f0\b0 \cf6  (
+\f1\b \cf8 nonatomic
+\f0\b0 \cf6 , 
+\f1\b \cf8 strong
+\f0\b0 \cf6 ) \cf10 UIVisualEffectView\cf6         *\cf11 floorBlurView\cf6 ;\
+
+\f1\b \cf8 @property
+\f0\b0 \cf6  (
+\f1\b \cf8 nonatomic
+\f0\b0 \cf6 , 
+\f1\b \cf8 strong
+\f0\b0 \cf6 ) \cf10 UIVisualEffectView\cf6         *\cf11 centralCircleBlurView\cf6 ;\
+
+\f1\b \cf8 @property
+\f0\b0 \cf6  (
+\f1\b \cf8 nonatomic
+\f0\b0 \cf6 , 
+\f1\b \cf8 assign
+\f0\b0 \cf6 ) \cf10 CGRect\cf6                     \cf11 defaultBottomBlurFrame\cf6 ;\
+
+\f1\b \cf8 @property
+\f0\b0 \cf6  (
+\f1\b \cf8 nonatomic
+\f0\b0 \cf6 , 
+\f1\b \cf8 strong
+\f0\b0 \cf6 ) \cf10 UIButton\cf6                   *\cf11 calibrationButton\cf6 ; \cf5 // This will serve as our "Continue" button in Idle state.\cf6 \
+
+\f1\b \cf8 @property
+\f0\b0 \cf6  (
+\f1\b \cf8 nonatomic
+\f0\b0 \cf6 , 
+\f1\b \cf8 strong
+\f0\b0 \cf6 ) \cf10 UILabel\cf6                    *\cf11 statusLabel\cf6 ;\
+
+\f1\b \cf8 @property
+\f0\b0 \cf6  (
+\f1\b \cf8 nonatomic
+\f0\b0 \cf6 , 
+\f1\b \cf8 strong
+\f0\b0 \cf6 ) \cf10 UIView\cf6                     *\cf11 loadingView\cf6 ; \cf5 // Loading overlay\cf6 \
+\
+\cf5 // State & Calibration Properties\cf6 \
+
+\f1\b \cf8 @property
+\f0\b0 \cf6  (
+\f1\b \cf8 nonatomic
+\f0\b0 \cf6 , 
+\f1\b \cf8 assign
+\f0\b0 \cf6 ) \cf9 CalibrationState\cf6           \cf11 calibrationState\cf6 ; \cf5 // Uses enum from .h\cf6 \
+
+\f1\b \cf8 @property
+\f0\b0 \cf6  (
+\f1\b \cf8 nonatomic
+\f0\b0 \cf6 , 
+\f1\b \cf8 assign
+\f0\b0 \cf6 ) 
+\f1\b \cf8 BOOL
+\f0\b0 \cf6                       \cf11 isOrientationValid\cf6 ;\
+
+\f1\b \cf8 @property
+\f0\b0 \cf6  (
+\f1\b \cf8 nonatomic
+\f0\b0 \cf6 , 
+\f1\b \cf8 strong
+\f0\b0 \cf6 , 
+\f1\b \cf8 nullable
+\f0\b0 \cf6 ) \cf10 NSNumber\cf6         *\cf11 referencePitchUp\cf6 ;\
+
+\f1\b \cf8 @property
+\f0\b0 \cf6  (
+\f1\b \cf8 nonatomic
+\f0\b0 \cf6 , 
+\f1\b \cf8 strong
+\f0\b0 \cf6 , 
+\f1\b \cf8 nullable
+\f0\b0 \cf6 ) \cf10 NSNumber\cf6         *\cf11 referencePitchDown\cf6 ;\
+
+\f1\b \cf8 @property
+\f0\b0 \cf6  (
+\f1\b \cf8 nonatomic
+\f0\b0 \cf6 , 
+\f1\b \cf8 strong
+\f0\b0 \cf6 , 
+\f1\b \cf8 nullable
+\f0\b0 \cf6 ) \cf10 NSNumber\cf6         *\cf11 floorPitchOffset\cf6 ;\
+
+\f1\b \cf8 @property
+\f0\b0 \cf6  (
+\f1\b \cf8 nonatomic
+\f0\b0 \cf6 , 
+\f1\b \cf8 strong
+\f0\b0 \cf6 , 
+\f1\b \cf8 nullable
+\f0\b0 \cf6 ) \cf10 NSNumber\cf6         *\cf11 floorWallIntersectionY\cf6 ; \cf5 // Stores detected Y coordinate\cf6 \
+\
+\cf5 // Permission State\cf6 \
+
+\f1\b \cf8 @property
+\f0\b0 \cf6  (
+\f1\b \cf8 nonatomic
+\f0\b0 \cf6 , 
+\f1\b \cf8 assign
+\f0\b0 \cf6 ) 
+\f1\b \cf8 BOOL
+\f0\b0 \cf6  \cf11 hasCameraPermission\cf6 ;\
+
+\f1\b \cf8 @property
+\f0\b0 \cf6  (
+\f1\b \cf8 nonatomic
+\f0\b0 \cf6 , 
+\f1\b \cf8 assign
+\f0\b0 \cf6 ) 
+\f1\b \cf8 BOOL
+\f0\b0 \cf6  \cf11 hasMotionPermission\cf6 ;\
+\
+\cf5 // UI Switch\cf6 \
+
+\f1\b \cf8 @property
+\f0\b0 \cf6  (
+\f1\b \cf8 nonatomic
+\f0\b0 \cf6 , 
+\f1\b \cf8 strong
+\f0\b0 \cf6 ) \cf10 UISwitch\cf6  *\cf11 detectionSwitch\cf6 ;\
+
+\f1\b \cf8 @property
+\f0\b0 \cf6  (
+\f1\b \cf8 nonatomic
+\f0\b0 \cf6 , 
+\f1\b \cf8 assign
+\f0\b0 \cf6 ) 
+\f1\b \cf8 BOOL
+\f0\b0 \cf6  \cf11 isDetectionActive\cf6 ;\
+\
+\cf2 #pragma mark 
+\f1\b \cf7 - Method Declarations
+\f0\b0 \cf6 \
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 removeLoadingViewIfNeeded\cf6 ;\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 setupVision\cf6 ;\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 setupUI\cf6 ;\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 checkAndRequestPermissions\cf6 ;\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 detectionSwitchChanged\cf6 :(\cf10 UISwitch\cf6  *)sender;\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 updateCalibrationUI\cf6 ;\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 startMotionUpdates\cf6 ;\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 setupCamera\cf6 ;\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 showPermissionAlert\cf6 :(\cf10 NSString\cf6  *)title \cf11 message\cf6 :(\cf10 NSString\cf6  *)message;\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 updateFloorBlurViewFrame\cf6 ;\
+- (\cf10 CGRect\cf6 )\cf11 calculateFloorBlurFrame\cf6 ;\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 applyGradientMaskToView\cf6 :(\cf10 UIVisualEffectView\cf6  *)view;\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 updateGradientMaskFrameForView\cf6 :(\cf10 UIVisualEffectView\cf6  *)view;\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 applyCircleMaskToView\cf6 :(\cf10 UIVisualEffectView\cf6  *)view;\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 updateCircleMaskFrameForView\cf6 :(\cf10 UIVisualEffectView\cf6  *)view;\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 processHorizonObservation\cf6 :(\cf10 VNHorizonObservation\cf6  *)observation;\
+- (\cf10 CGImagePropertyOrientation\cf6 )\cf11 currentCGImageOrientationForBuffer\cf6 ;\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 startMotionUpdatesForCalibration\cf6 ;\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 handleCalibrationMotionWithPitch\cf6 :(
+\f1\b \cf8 double
+\f0\b0 \cf6 )pitch;\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 calculateFloorOffset\cf6 ;\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 resetCalibration\cf6 ;\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 calibrationButtonTapped\cf6 :(\cf10 UIButton\cf6  *)sender;\
+\
+
+\f1\b \cf8 @end
+\f0\b0 \cf6 \
+\
+\cf2 #pragma mark 
+\f1\b \cf7 - Implementation
+\f0\b0 \cf6 \
+\
+
+\f1\b \cf8 @implementation
+\f0\b0 \cf6  \cf12 ViewController\cf6 \
+\
+\cf2 #pragma mark 
+\f1\b \cf7 - Lifecycle
+\f0\b0 \cf6 \
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 viewDidLoad\cf6  \{\
+    [
+\f1\b \cf8 super
+\f0\b0 \cf6  \cf13 viewDidLoad\cf6 ];\
+    \
+    \cf5 // 1. Set initial background to gray.\cf6 \
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6 .\cf13 backgroundColor\cf6  = [\cf10 UIColor\cf6  \cf13 grayColor\cf6 ];\
+    \
+    \cf5 // 2. Create a container view for the preview layer.\cf6 \
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 previewContainerView\cf6  = [[\cf10 UIView\cf6  \cf13 alloc\cf6 ] \cf13 initWithFrame\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6 .\cf13 bounds\cf6 ];\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 previewContainerView\cf6 .\cf13 autoresizingMask\cf6  = \cf13 UIViewAutoresizingFlexibleWidth\cf6  | \cf13 UIViewAutoresizingFlexibleHeight\cf6 ;\
+    [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6  \cf13 addSubview\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 previewContainerView\cf6 ];\
+    \
+    \cf5 // 3. Setup the loading view.\cf6 \
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 loadingView\cf6  = [[\cf10 UIView\cf6  \cf13 alloc\cf6 ] \cf13 initWithFrame\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6 .\cf13 bounds\cf6 ];\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 loadingView\cf6 .\cf13 backgroundColor\cf6  = [\cf10 UIColor\cf6  \cf13 blackColor\cf6 ];\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 loadingView\cf6 .\cf13 autoresizingMask\cf6  = \cf13 UIViewAutoresizingFlexibleWidth\cf6  | \cf13 UIViewAutoresizingFlexibleHeight\cf6 ;\
+    \cf10 UIActivityIndicatorView\cf6  *indicator = [[\cf10 UIActivityIndicatorView\cf6  \cf13 alloc\cf6 ] \cf13 initWithActivityIndicatorStyle\cf6 :\cf13 UIActivityIndicatorViewStyleLarge\cf6 ];\
+    indicator.\cf13 color\cf6  = [\cf10 UIColor\cf6  \cf13 whiteColor\cf6 ];\
+    indicator.\cf13 center\cf6  = \cf13 CGPointMake\cf6 (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 loadingView\cf6 .\cf13 bounds\cf6 .\cf13 size\cf6 .\cf13 width\cf6  / \cf15 2.0\cf6 , 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 loadingView\cf6 .\cf13 bounds\cf6 .\cf13 size\cf6 .\cf13 height\cf6  / \cf15 2.0\cf6 );\
+    indicator.\cf13 autoresizingMask\cf6  = \cf13 UIViewAutoresizingFlexibleLeftMargin\cf6  | \cf13 UIViewAutoresizingFlexibleRightMargin\cf6  | \cf13 UIViewAutoresizingFlexibleTopMargin\cf6  | \cf13 UIViewAutoresizingFlexibleBottomMargin\cf6 ;\
+    [indicator \cf13 startAnimating\cf6 ];\
+    [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 loadingView\cf6  \cf13 addSubview\cf6 :indicator];\
+    [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6  \cf13 addSubview\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 loadingView\cf6 ];\
+    \
+    \cf5 // Initialize other properties.\cf6 \
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 isDetectionActive\cf6  = 
+\f1\b \cf8 NO
+\f0\b0 \cf6 ;\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6  = [[\cf10 CMMotionManager\cf6  \cf13 alloc\cf6 ] \cf13 init\cf6 ];\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 visionQueue\cf6  = \cf13 dispatch_queue_create\cf6 (\cf4 "com.example.visionQueue"\cf6 , \cf2 DISPATCH_QUEUE_SERIAL\cf6 );\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationButton\cf6  = [\cf10 UIButton\cf6  \cf13 buttonWithType\cf6 :\cf13 UIButtonTypeSystem\cf6 ];\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationState\cf6  = \cf14 CalibrationStateIdle\cf6 ;\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 isOrientationValid\cf6  = 
+\f1\b \cf8 NO
+\f0\b0 \cf6 ;\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 hasCameraPermission\cf6  = 
+\f1\b \cf8 NO
+\f0\b0 \cf6 ;\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 hasMotionPermission\cf6  = 
+\f1\b \cf8 NO
+\f0\b0 \cf6 ;\
+    \
+    \cf5 // Setup Vision and UI; then check permissions.\cf6 \
+    [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 setupVision\cf6 ];\
+    [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 setupUI\cf6 ];\
+    [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 checkAndRequestPermissions\cf6 ];\
+\}\
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 viewDidLayoutSubviews\cf6  \{\
+    [
+\f1\b \cf8 super
+\f0\b0 \cf6  \cf13 viewDidLayoutSubviews\cf6 ];\
+    \
+    \cf5 // Update the preview layer frame to match the preview container's bounds.\cf6 \
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 previewLayer\cf6 ) \{\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 previewLayer\cf6 .\cf13 frame\cf6  = 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 previewContainerView\cf6 .\cf13 bounds\cf6 ;\
+    \}\
+    \
+    \cf5 // Layout other UI elements.\cf6 \
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorBlurView\cf6 ) \{\
+        \cf10 CGRect\cf6  floorFrame = [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 calculateFloorBlurFrame\cf6 ];\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorBlurView\cf6 .\cf13 frame\cf6  = floorFrame;\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 updateGradientMaskFrameForView\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorBlurView\cf6 ];\
+    \}\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 centralCircleBlurView\cf6 ) \{\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 centralCircleBlurView\cf6 .\cf13 center\cf6  = 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6 .\cf13 center\cf6 ;\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 updateCircleMaskFrameForView\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 centralCircleBlurView\cf6 ];\
+    \}\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationButton\cf6 ) \{\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationButton\cf6 .\cf13 frame\cf6  = \cf13 CGRectMake\cf6 (\cf15 20\cf6 ,\
+                                                  
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6 .\cf13 bounds\cf6 .\cf13 size\cf6 .\cf13 height\cf6  - 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6 .\cf13 safeAreaInsets\cf6 .\cf13 bottom\cf6  - \cf15 80\cf6 ,\
+                                                  
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6 .\cf13 bounds\cf6 .\cf13 size\cf6 .\cf13 width\cf6  - \cf15 40\cf6 ,\
+                                                  \cf15 50\cf6 );\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationButton\cf6 .\cf13 autoresizingMask\cf6  = \cf13 UIViewAutoresizingFlexibleWidth\cf6  | \cf13 UIViewAutoresizingFlexibleTopMargin\cf6 ;\
+    \}\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 ) \{\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 .\cf13 frame\cf6  = \cf13 CGRectMake\cf6 (\cf15 20\cf6 ,\
+                                            
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6 .\cf13 safeAreaInsets\cf6 .\cf13 top\cf6  + \cf15 20\cf6 ,\
+                                            
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6 .\cf13 bounds\cf6 .\cf13 size\cf6 .\cf13 width\cf6  - \cf15 40\cf6 ,\
+                                            \cf15 30\cf6 );\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 .\cf13 autoresizingMask\cf6  = \cf13 UIViewAutoresizingFlexibleWidth\cf6  | \cf13 UIViewAutoresizingFlexibleBottomMargin\cf6 ;\
+    \}\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 loadingView\cf6 ) \{\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 loadingView\cf6 .\cf13 frame\cf6  = 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6 .\cf13 bounds\cf6 ;\
+        
+\f1\b \cf8 for
+\f0\b0 \cf6  (\cf10 UIView\cf6  *subview 
+\f1\b \cf8 in
+\f0\b0 \cf6  
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 loadingView\cf6 .\cf13 subviews\cf6 ) \{\
+            
+\f1\b \cf8 if
+\f0\b0 \cf6  ([subview \cf13 isKindOfClass\cf6 :[\cf10 UIActivityIndicatorView\cf6  \cf13 class\cf6 ]]) \{\
+                subview.\cf13 center\cf6  = \cf13 CGPointMake\cf6 (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 loadingView\cf6 .\cf13 bounds\cf6 .\cf13 size\cf6 .\cf13 width\cf6  / \cf15 2.0\cf6 ,\
+                                             
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 loadingView\cf6 .\cf13 bounds\cf6 .\cf13 size\cf6 .\cf13 height\cf6  / \cf15 2.0\cf6 );\
+                
+\f1\b \cf8 break
+\f0\b0 \cf6 ;\
+            \}\
+        \}\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 loadingView\cf6 .\cf13 autoresizingMask\cf6  = \cf13 UIViewAutoresizingFlexibleWidth\cf6  | \cf13 UIViewAutoresizingFlexibleHeight\cf6 ;\
+    \}\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 detectionSwitch\cf6 ) \{\
+        \cf10 CGFloat\cf6  switchX = 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6 .\cf13 bounds\cf6 .\cf13 size\cf6 .\cf13 width\cf6  - 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 detectionSwitch\cf6 .\cf13 bounds\cf6 .\cf13 size\cf6 .\cf13 width\cf6  - \cf15 20\cf6 ;\
+        \cf10 CGFloat\cf6  switchY = 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6  ? (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 .\cf13 frame\cf6 .\cf13 origin\cf6 .\cf13 y\cf6  + 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 .\cf13 frame\cf6 .\cf13 size\cf6 .\cf13 height\cf6  + \cf15 10\cf6 )\
+                                           : (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6 .\cf13 safeAreaInsets\cf6 .\cf13 top\cf6  + \cf15 20\cf6 );\
+        switchY = \cf2 MAX\cf6 (switchY, 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6 .\cf13 safeAreaInsets\cf6 .\cf13 top\cf6  + \cf15 10\cf6 );\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 detectionSwitch\cf6 .\cf13 frame\cf6  = \cf13 CGRectMake\cf6 (switchX, switchY, 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 detectionSwitch\cf6 .\cf13 bounds\cf6 .\cf13 size\cf6 .\cf13 width\cf6 , 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 detectionSwitch\cf6 .\cf13 bounds\cf6 .\cf13 size\cf6 .\cf13 height\cf6 );\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 detectionSwitch\cf6 .\cf13 autoresizingMask\cf6  = \cf13 UIViewAutoresizingFlexibleLeftMargin\cf6  | \cf13 UIViewAutoresizingFlexibleBottomMargin\cf6 ;\
+    \}\
+\}\
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 viewWillAppear\cf6 :(
+\f1\b \cf8 BOOL
+\f0\b0 \cf6 )animated \{\
+    [
+\f1\b \cf8 super
+\f0\b0 \cf6  \cf13 viewWillAppear\cf6 :animated];\
+    \
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 session\cf6  && !
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 session\cf6 .\cf13 isRunning\cf6  && 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 hasCameraPermission\cf6 ) \{\
+        \cf13 dispatch_async\cf6 (\cf13 dispatch_get_global_queue\cf6 (\cf2 DISPATCH_QUEUE_PRIORITY_DEFAULT\cf6 , \cf15 0\cf6 ), ^\{\
+            [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 session\cf6  \cf13 startRunning\cf6 ];\
+        \});\
+    \}\
+    \
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6  && !
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6 .\cf13 isDeviceMotionActive\cf6  &&\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 hasMotionPermission\cf6  &&\
+        (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationState\cf6  != \cf14 CalibrationStateLookingUp\cf6  && 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationState\cf6  != \cf14 CalibrationStateLookingDown\cf6 )) \{\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 startMotionUpdates\cf6 ];\
+    \}\
+\}\
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 viewDidAppear\cf6 :(
+\f1\b \cf8 BOOL
+\f0\b0 \cf6 )animated \{\
+    [
+\f1\b \cf8 super
+\f0\b0 \cf6  \cf13 viewDidAppear\cf6 :animated];\
+    \
+    \cf5 // Remove the loading view if present.\cf6 \
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 loadingView\cf6 ) \{\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 removeLoadingViewIfNeeded\cf6 ];\
+    \}\
+\}\
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 viewWillDisappear\cf6 :(
+\f1\b \cf8 BOOL
+\f0\b0 \cf6 )animated \{\
+    [
+\f1\b \cf8 super
+\f0\b0 \cf6  \cf13 viewWillDisappear\cf6 :animated];\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 session\cf6  && 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 session\cf6 .\cf13 isRunning\cf6 ) \{\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 session\cf6  \cf13 stopRunning\cf6 ];\
+    \}\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6 ) \{\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6  \cf13 stopDeviceMotionUpdates\cf6 ];\
+    \}\
+\}\
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 dealloc\cf6  \{\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6 ) \{\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6  \cf13 stopDeviceMotionUpdates\cf6 ];\
+    \}\
+\}\
+\
+\cf2 #pragma mark 
+\f1\b \cf7 - Permission Handling
+\f0\b0 \cf6 \
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 checkAndRequestPermissions\cf6  \{\
+    \cf13 NSLog\cf6 (\cf4 @"Checking permissions..."\cf6 );\
+    \cf10 AVAuthorizationStatus\cf6  cameraAuthStatus = [\cf10 AVCaptureDevice\cf6  \cf13 authorizationStatusForMediaType\cf6 :\cf13 AVMediaTypeVideo\cf6 ];\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (cameraAuthStatus == \cf13 AVAuthorizationStatusAuthorized\cf6 ) \{\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 hasCameraPermission\cf6  = 
+\f1\b \cf8 YES
+\f0\b0 \cf6 ;\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 updateCalibrationUI\cf6 ];\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 setupCamera\cf6 ];\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 checkMotionPermission\cf6 ];\
+    \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  
+\f1\b \cf8 if
+\f0\b0 \cf6  (cameraAuthStatus == \cf13 AVAuthorizationStatusNotDetermined\cf6 ) \{\
+        [\cf10 AVCaptureDevice\cf6  \cf13 requestAccessForMediaType\cf6 :\cf13 AVMediaTypeVideo\cf6  \cf13 completionHandler\cf6 :^(
+\f1\b \cf8 BOOL
+\f0\b0 \cf6  granted) \{\
+            \cf13 dispatch_async\cf6 (\cf13 dispatch_get_main_queue\cf6 (), ^\{\
+                
+\f1\b \cf8 if
+\f0\b0 \cf6  (granted) \{\
+                    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 hasCameraPermission\cf6  = 
+\f1\b \cf8 YES
+\f0\b0 \cf6 ;\
+                    [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 setupCamera\cf6 ];\
+                \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  \{\
+                    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 hasCameraPermission\cf6  = 
+\f1\b \cf8 NO
+\f0\b0 \cf6 ;\
+                    [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 showPermissionAlert\cf6 :\cf4 @"Camera Access Required"\cf6  \cf14 message\cf6 :\cf4 @"This app needs camera access to function. Please enable it in Settings."\cf6 ];\
+                \}\
+                [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 updateCalibrationUI\cf6 ];\
+                [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 checkMotionPermission\cf6 ];\
+            \});\
+        \}];\
+    \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  \{\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 hasCameraPermission\cf6  = 
+\f1\b \cf8 NO
+\f0\b0 \cf6 ;\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 updateCalibrationUI\cf6 ];\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 showPermissionAlert\cf6 :\cf4 @"Camera Access Required"\cf6  \cf14 message\cf6 :\cf4 @"Camera access was previously denied or restricted. Please enable it in Settings."\cf6 ];\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 checkMotionPermission\cf6 ];\
+    \}\
+\}\
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 checkMotionPermission\cf6  \{\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6 .\cf13 isDeviceMotionAvailable\cf6 ) \{\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6 .\cf13 deviceMotionUpdateInterval\cf6  = \cf15 0.1\cf6 ;\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6  \cf13 startDeviceMotionUpdatesToQueue\cf6 :[\cf10 NSOperationQueue\cf6  \cf13 mainQueue\cf6 ]\
+                                               \cf13 withHandler\cf6 :^(\cf10 CMDeviceMotion\cf6  *motion, \cf10 NSError\cf6  *error) \{\
+            [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6  \cf13 stopDeviceMotionUpdates\cf6 ];\
+            
+\f1\b \cf8 BOOL
+\f0\b0 \cf6  permissionGranted = 
+\f1\b \cf8 NO
+\f0\b0 \cf6 ;\
+            
+\f1\b \cf8 if
+\f0\b0 \cf6  (error && error.\cf13 code\cf6  == \cf13 CMErrorMotionActivityNotAuthorized\cf6 ) \{\
+                
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 hasMotionPermission\cf6  = 
+\f1\b \cf8 NO
+\f0\b0 \cf6 ;\
+                [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 showPermissionAlert\cf6 :\cf4 @"Motion Access Required"\cf6  \cf14 message\cf6 :\cf4 @"Motion access was denied. Calibration requires motion data. Please enable it in Settings."\cf6 ];\
+            \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  
+\f1\b \cf8 if
+\f0\b0 \cf6  (error) \{\
+                
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 hasMotionPermission\cf6  = 
+\f1\b \cf8 NO
+\f0\b0 \cf6 ;\
+                
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 ) 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 .\cf13 text\cf6  = \cf4 @"Motion Error"\cf6 ;\
+            \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  \{\
+                
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 hasMotionPermission\cf6  = 
+\f1\b \cf8 YES
+\f0\b0 \cf6 ;\
+                permissionGranted = 
+\f1\b \cf8 YES
+\f0\b0 \cf6 ;\
+            \}\
+            [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 updateCalibrationUI\cf6 ];\
+            
+\f1\b \cf8 if
+\f0\b0 \cf6  (permissionGranted) \{\
+                [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 startMotionUpdates\cf6 ];\
+            \}\
+            [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 removeLoadingViewIfNeeded\cf6 ];\
+        \}];\
+    \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  \{\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 hasMotionPermission\cf6  = 
+\f1\b \cf8 NO
+\f0\b0 \cf6 ;\
+        
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 ) 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 .\cf13 text\cf6  = \cf4 @"Motion sensor unavailable"\cf6 ;\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 updateCalibrationUI\cf6 ];\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 removeLoadingViewIfNeeded\cf6 ];\
+    \}\
+\}\
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 showPermissionAlert\cf6 :(\cf10 NSString\cf6  *)title \cf11 message\cf6 :(\cf10 NSString\cf6  *)message \{\
+    \cf13 dispatch_async\cf6 (\cf13 dispatch_get_main_queue\cf6 (), ^\{\
+        \cf10 UIAlertController\cf6  *alert = [\cf10 UIAlertController\cf6  \cf13 alertControllerWithTitle\cf6 :title\
+                                                                       \cf13 message\cf6 :message\
+                                                                \cf13 preferredStyle\cf6 :\cf13 UIAlertControllerStyleAlert\cf6 ];\
+        [alert \cf13 addAction\cf6 :[\cf10 UIAlertAction\cf6  \cf13 actionWithTitle\cf6 :\cf4 @"Settings"\cf6  \cf13 style\cf6 :\cf13 UIAlertActionStyleDefault\cf6  \cf13 handler\cf6 :^(\cf10 UIAlertAction\cf6  *action) \{\
+            \cf10 NSURL\cf6  *settingsURL = [\cf10 NSURL\cf6  \cf13 URLWithString\cf6 :\cf13 UIApplicationOpenSettingsURLString\cf6 ];\
+            
+\f1\b \cf8 if
+\f0\b0 \cf6  ([[\cf10 UIApplication\cf6  \cf13 sharedApplication\cf6 ] \cf13 canOpenURL\cf6 :settingsURL]) \{\
+                [[\cf10 UIApplication\cf6  \cf13 sharedApplication\cf6 ] \cf13 openURL\cf6 :settingsURL \cf13 options\cf6 :\cf15 @\{\}\cf6  \cf13 completionHandler\cf6 :
+\f1\b \cf8 nil
+\f0\b0 \cf6 ];\
+            \}\
+        \}]];\
+        [alert \cf13 addAction\cf6 :[\cf10 UIAlertAction\cf6  \cf13 actionWithTitle\cf6 :\cf4 @"OK"\cf6  \cf13 style\cf6 :\cf13 UIAlertActionStyleCancel\cf6  \cf13 handler\cf6 :
+\f1\b \cf8 nil
+\f0\b0 \cf6 ]];\
+        \cf10 UIViewController\cf6  *presenter = 
+\f1\b \cf8 self
+\f0\b0 \cf6 ;\
+        
+\f1\b \cf8 while
+\f0\b0 \cf6  (presenter.\cf13 presentedViewController\cf6 ) \{\
+            presenter = presenter.\cf13 presentedViewController\cf6 ;\
+        \}\
+        
+\f1\b \cf8 if
+\f0\b0 \cf6  (presenter.\cf13 view\cf6 .\cf13 window\cf6 ) \{\
+            [presenter \cf13 presentViewController\cf6 :alert \cf13 animated\cf6 :
+\f1\b \cf8 YES
+\f0\b0 \cf6  \cf13 completion\cf6 :
+\f1\b \cf8 nil
+\f0\b0 \cf6 ];\
+        \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  \{\
+            \cf13 NSLog\cf6 (\cf4 @"Cannot present permission alert - view controller not in window hierarchy."\cf6 );\
+        \}\
+    \});\
+\}\
+\
+\cf2 #pragma mark 
+\f1\b \cf7 - Setup Methods
+\f0\b0 \cf6 \
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 setupVision\cf6  \{\
+    
+\f1\b \cf8 __weak
+\f0\b0 \cf6  
+\f1\b \cf8 typeof
+\f0\b0 \cf6 (
+\f1\b \cf8 self
+\f0\b0 \cf6 ) weakSelf = 
+\f1\b \cf8 self
+\f0\b0 \cf6 ;\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 horizonRequest\cf6  = [[\cf10 VNDetectHorizonRequest\cf6  \cf13 alloc\cf6 ] \cf13 initWithCompletionHandler\cf6 :^(\cf10 VNRequest\cf6  *request, \cf10 NSError\cf6  *error) \{\
+        
+\f1\b \cf8 __strong
+\f0\b0 \cf6  
+\f1\b \cf8 typeof
+\f0\b0 \cf6 (weakSelf) strongSelf = weakSelf;\
+        
+\f1\b \cf8 if
+\f0\b0 \cf6  (!strongSelf) 
+\f1\b \cf8 return
+\f0\b0 \cf6 ;\
+        \cf13 dispatch_async\cf6 (\cf13 dispatch_get_main_queue\cf6 (), ^\{\
+            
+\f1\b \cf8 if
+\f0\b0 \cf6  (error) \{\
+                \cf13 NSLog\cf6 (\cf4 @"Horizon detection error: %@"\cf6 , error.\cf13 localizedDescription\cf6 );\
+                strongSelf.\cf14 floorWallIntersectionY\cf6  = 
+\f1\b \cf8 nil
+\f0\b0 \cf6 ;\
+                [strongSelf \cf14 updateFloorBlurViewFrame\cf6 ];\
+                
+\f1\b \cf8 return
+\f0\b0 \cf6 ;\
+            \}\
+            \cf10 NSArray\cf6 <\cf10 VNHorizonObservation\cf6  *> *results = request.\cf13 results\cf6 ;\
+            \cf10 VNHorizonObservation\cf6  *observation = results.\cf13 firstObject\cf6 ;\
+            
+\f1\b \cf8 if
+\f0\b0 \cf6  (!observation) \{\
+                strongSelf.\cf14 floorWallIntersectionY\cf6  = 
+\f1\b \cf8 nil
+\f0\b0 \cf6 ;\
+                [strongSelf \cf14 updateFloorBlurViewFrame\cf6 ];\
+                
+\f1\b \cf8 return
+\f0\b0 \cf6 ;\
+            \}\
+            [strongSelf \cf14 processHorizonObservation\cf6 :observation];\
+        \});\
+    \}];\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 horizonRequest\cf6 ) \{\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 horizonRequest\cf6 .\cf13 regionOfInterest\cf6  = \cf13 CGRectMake\cf6 (\cf15 0.0\cf6 , \cf15 0.0\cf6 , \cf15 1.0\cf6 , \cf15 0.5\cf6 );\
+        \cf13 NSLog\cf6 (\cf4 @"Vision setup: Set regionOfInterest to %@"\cf6 , \cf13 NSStringFromCGRect\cf6 (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 horizonRequest\cf6 .\cf13 regionOfInterest\cf6 ));\
+    \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  \{\
+        \cf13 NSLog\cf6 (\cf4 @"Error: HorizonRequest is nil, cannot set regionOfInterest."\cf6 );\
+    \}\
+    \cf13 NSLog\cf6 (\cf4 @"Vision setup completed."\cf6 );\
+\}\
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 setupCamera\cf6  \{\
+    \cf13 NSLog\cf6 (\cf4 @"setupCamera: Starting (permission granted)."\cf6 );\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 session\cf6 ) \{\
+        
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 session\cf6 .\cf13 isRunning\cf6 ) \{\
+            [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 session\cf6  \cf13 stopRunning\cf6 ];\
+        \}\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 session\cf6  = 
+\f1\b \cf8 nil
+\f0\b0 \cf6 ;\
+    \}\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 session\cf6  = [[\cf10 AVCaptureSession\cf6  \cf13 alloc\cf6 ] \cf13 init\cf6 ];\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (!
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 session\cf6 ) \{ \cf13 NSLog\cf6 (\cf4 @"Error: Failed to create AVCaptureSession."\cf6 ); 
+\f1\b \cf8 return
+\f0\b0 \cf6 ; \}\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 session\cf6 .\cf13 sessionPreset\cf6  = \cf13 AVCaptureSessionPresetHigh\cf6 ;\
+    \
+    \cf10 AVCaptureDevice\cf6  *camera = [\cf10 AVCaptureDevice\cf6  \cf13 defaultDeviceWithDeviceType\cf6 :\cf13 AVCaptureDeviceTypeBuiltInWideAngleCamera\cf6 \
+                                                                 \cf13 mediaType\cf6 :\cf13 AVMediaTypeVideo\cf6 \
+                                                                  \cf13 position\cf6 :\cf13 AVCaptureDevicePositionBack\cf6 ];\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (!camera) \{ \cf13 NSLog\cf6 (\cf4 @"Error: Back camera unavailable."\cf6 ); 
+\f1\b \cf8 return
+\f0\b0 \cf6 ; \}\
+    \cf10 NSError\cf6  *error = 
+\f1\b \cf8 nil
+\f0\b0 \cf6 ;\
+    \cf10 AVCaptureDeviceInput\cf6  *input = [\cf10 AVCaptureDeviceInput\cf6  \cf13 deviceInputWithDevice\cf6 :camera \cf13 error\cf6 :&error];\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (error || !input) \{ \cf13 NSLog\cf6 (\cf4 @"Error creating camera input: %@"\cf6 , error.\cf13 localizedDescription\cf6  ?: \cf4 @"Unknown"\cf6 ); 
+\f1\b \cf8 return
+\f0\b0 \cf6 ; \}\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  ([
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 session\cf6  \cf13 canAddInput\cf6 :input]) \{\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 session\cf6  \cf13 addInput\cf6 :input];\
+    \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  \{\
+        \cf13 NSLog\cf6 (\cf4 @"Error: Could not add camera input."\cf6 ); 
+\f1\b \cf8 return
+\f0\b0 \cf6 ;\
+    \}\
+    \
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 videoDataOutput\cf6  = [[\cf10 AVCaptureVideoDataOutput\cf6  \cf13 alloc\cf6 ] \cf13 init\cf6 ];\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (!
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 videoDataOutput\cf6 ) \{ \cf13 NSLog\cf6 (\cf4 @"Error: Failed to create AVCaptureVideoDataOutput."\cf6 ); 
+\f1\b \cf8 return
+\f0\b0 \cf6 ; \}\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (!
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 visionQueue\cf6 ) \{\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 visionQueue\cf6  = \cf13 dispatch_queue_create\cf6 (\cf4 "com.example.visionQueue.fallback"\cf6 , \cf2 DISPATCH_QUEUE_SERIAL\cf6 );\
+    \}\
+    [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 videoDataOutput\cf6  \cf13 setSampleBufferDelegate\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf13 queue\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 visionQueue\cf6 ];\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 videoDataOutput\cf6 .\cf13 alwaysDiscardsLateVideoFrames\cf6  = 
+\f1\b \cf8 YES
+\f0\b0 \cf6 ;\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 videoDataOutput\cf6 .\cf13 videoSettings\cf6  = \cf15 @\{\cf6 (
+\f1\b \cf8 id
+\f0\b0 \cf6 )\cf13 kCVPixelBufferPixelFormatTypeKey\cf6 : \cf15 @(\cf13 kCVPixelFormatType_32BGRA\cf15 )\}\cf6 ;\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  ([
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 session\cf6  \cf13 canAddOutput\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 videoDataOutput\cf6 ]) \{\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 session\cf6  \cf13 addOutput\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 videoDataOutput\cf6 ];\
+    \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  \{\
+        \cf13 NSLog\cf6 (\cf4 @"Error: Could not add video data output."\cf6 ); 
+\f1\b \cf8 return
+\f0\b0 \cf6 ;\
+    \}\
+    \
+    \cf10 AVCaptureConnection\cf6  *connection = [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 videoDataOutput\cf6  \cf13 connectionWithMediaType\cf6 :\cf13 AVMediaTypeVideo\cf6 ];\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (connection) \{\
+        \cf10 CGFloat\cf6  desiredRotationAngle = \cf15 90.0\cf6 ;\
+        
+\f1\b \cf8 if
+\f0\b0 \cf6  ([connection \cf13 isVideoRotationAngleSupported\cf6 :desiredRotationAngle]) \{\
+            connection.\cf13 videoRotationAngle\cf6  = desiredRotationAngle;\
+        \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  
+\f1\b \cf8 if
+\f0\b0 \cf6  ([connection \cf13 isVideoRotationAngleSupported\cf6 :\cf15 0\cf6 ]) \{\
+            connection.\cf13 videoRotationAngle\cf6  = \cf15 0\cf6 ;\
+        \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  \{\
+            \cf13 NSLog\cf6 (\cf4 @"setupCamera: Warning - cannot set videoRotationAngle."\cf6 );\
+        \}\
+        
+\f1\b \cf8 if
+\f0\b0 \cf6  (connection.\cf13 isVideoMirroringSupported\cf6 ) \{\
+            connection.\cf13 videoMirrored\cf6  = 
+\f1\b \cf8 NO
+\f0\b0 \cf6 ;\
+        \}\
+    \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  \{\
+        \cf13 NSLog\cf6 (\cf4 @"setupCamera: Error - Failed to get video connection for output."\cf6 );\
+    \}\
+    \
+    \cf13 dispatch_async\cf6 (\cf13 dispatch_get_main_queue\cf6 (), ^\{\
+        
+\f1\b \cf8 if
+\f0\b0 \cf6  (!
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 previewLayer\cf6 ) \{\
+            
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 previewLayer\cf6  = [\cf10 AVCaptureVideoPreviewLayer\cf6  \cf13 layerWithSession\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 session\cf6 ];\
+            
+\f1\b \cf8 if
+\f0\b0 \cf6  (!
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 previewLayer\cf6 ) \{ \cf13 NSLog\cf6 (\cf4 @"Error: Failed to create AVCaptureVideoPreviewLayer."\cf6 ); 
+\f1\b \cf8 return
+\f0\b0 \cf6 ; \}\
+            
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 previewLayer\cf6 .\cf13 videoGravity\cf6  = \cf13 AVLayerVideoGravityResizeAspectFill\cf6 ;\
+            
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 previewLayer\cf6 .\cf13 frame\cf6  = 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 previewContainerView\cf6 .\cf13 bounds\cf6 ;\
+            [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 previewContainerView\cf6 .\cf13 layer\cf6  \cf13 insertSublayer\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 previewLayer\cf6  \cf13 atIndex\cf6 :\cf15 0\cf6 ];\
+        \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  \{\
+            
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 previewLayer\cf6 .\cf13 session\cf6  = 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 session\cf6 ;\
+            
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 previewLayer\cf6 .\cf13 frame\cf6  = 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 previewContainerView\cf6 .\cf13 bounds\cf6 ;\
+        \}\
+        
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 isViewLoaded\cf6  && 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6 .\cf13 window\cf6 ) \{\
+            [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6  \cf13 setNeedsLayout\cf6 ];\
+            [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6  \cf13 layoutIfNeeded\cf6 ];\
+        \}\
+    \});\
+    \
+    \cf13 NSLog\cf6 (\cf4 @"setupCamera: Completed."\cf6 );\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 isViewLoaded\cf6  && 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6 .\cf13 window\cf6  && 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 session\cf6  && !
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 session\cf6 .\cf13 isRunning\cf6  && 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 hasCameraPermission\cf6 ) \{\
+         \cf13 dispatch_async\cf6 (\cf13 dispatch_get_global_queue\cf6 (\cf2 DISPATCH_QUEUE_PRIORITY_DEFAULT\cf6 , \cf15 0\cf6 ), ^\{\
+             [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 session\cf6  \cf13 startRunning\cf6 ];\
+             \cf13 dispatch_after\cf6 (\cf13 dispatch_time\cf6 (\cf2 DISPATCH_TIME_NOW\cf6 , (\cf10 int64_t\cf6 )(\cf15 1.0\cf6  * \cf2 NSEC_PER_SEC\cf6 )), \cf13 dispatch_get_main_queue\cf6 (), ^\{\
+                 
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 session\cf6  && !
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 session\cf6 .\cf13 isRunning\cf6 ) \{\
+                     \cf13 NSLog\cf6 (\cf4 @"Main Thread (from setupCamera, 1 sec later): SESSION FAILED TO START/STAY RUNNING!"\cf6 );\
+                 \}\
+             \});\
+         \});\
+     \}\
+\}\
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 setupUI\cf6  \{\
+    \cf13 NSLog\cf6 (\cf4 @"setupUI: Starting."\cf6 );\
+    \cf10 CGFloat\cf6  defaultBlurHeight = \cf15 200.0\cf6 ;\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 defaultBottomBlurFrame\cf6  = \cf13 CGRectMake\cf6 (\cf15 0\cf6 , 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6 .\cf13 bounds\cf6 .\cf13 size\cf6 .\cf13 height\cf6  - defaultBlurHeight,\
+                                             
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6 .\cf13 bounds\cf6 .\cf13 size\cf6 .\cf13 width\cf6 , defaultBlurHeight);\
+    \cf10 UIBlurEffect\cf6  *blurEffect = [\cf10 UIBlurEffect\cf6  \cf13 effectWithStyle\cf6 :\cf13 UIBlurEffectStyleSystemMaterial\cf6 ];\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (!blurEffect) \{ \cf13 NSLog\cf6 (\cf4 @"Error: Failed to create blur effect."\cf6 ); \}\
+    \
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorBlurView\cf6  = [[\cf10 UIVisualEffectView\cf6  \cf13 alloc\cf6 ] \cf13 initWithEffect\cf6 :blurEffect];\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorBlurView\cf6 ) \{\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorBlurView\cf6 .\cf13 frame\cf6  = 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 defaultBottomBlurFrame\cf6 ;\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorBlurView\cf6 .\cf13 autoresizingMask\cf6  = \cf13 UIViewAutoresizingFlexibleWidth\cf6  | \cf13 UIViewAutoresizingFlexibleTopMargin\cf6 ;\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 applyGradientMaskToView\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorBlurView\cf6 ];\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6  \cf13 addSubview\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorBlurView\cf6 ];\
+        \cf13 NSLog\cf6 (\cf4 @"setupUI: Added floor blur."\cf6 );\
+    \}\
+    \
+    \cf10 CGFloat\cf6  circleSize = \cf15 100.0\cf6 ;\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 centralCircleBlurView\cf6  = [[\cf10 UIVisualEffectView\cf6  \cf13 alloc\cf6 ] \cf13 initWithEffect\cf6 :blurEffect];\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 centralCircleBlurView\cf6 ) \{\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 centralCircleBlurView\cf6 .\cf13 frame\cf6  = \cf13 CGRectMake\cf6 (\cf15 0\cf6 , \cf15 0\cf6 , circleSize, circleSize);\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 centralCircleBlurView\cf6 .\cf13 center\cf6  = 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6 .\cf13 center\cf6 ;\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 centralCircleBlurView\cf6 .\cf13 autoresizingMask\cf6  = \cf13 UIViewAutoresizingFlexibleLeftMargin\cf6  | \cf13 UIViewAutoresizingFlexibleRightMargin\cf6  | \cf13 UIViewAutoresizingFlexibleTopMargin\cf6  | \cf13 UIViewAutoresizingFlexibleBottomMargin\cf6 ;\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 applyCircleMaskToView\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 centralCircleBlurView\cf6 ];\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6  \cf13 addSubview\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 centralCircleBlurView\cf6 ];\
+        \cf13 NSLog\cf6 (\cf4 @"setupUI: Added circle blur."\cf6 );\
+    \}\
+    \
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationButton\cf6 ) \{\
+        \cf5 // When in Idle state, we want the button to read "Continue"\cf6 \
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationButton\cf6  \cf13 setTitle\cf6 :\cf4 @"Continue"\cf6  \cf13 forState\cf6 :\cf13 UIControlStateNormal\cf6 ];\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationButton\cf6  \cf13 addTarget\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf13 action\cf6 :
+\f1\b \cf8 @selector
+\f0\b0 \cf6 (calibrationButtonTapped:) \cf13 forControlEvents\cf6 :\cf13 UIControlEventTouchUpInside\cf6 ];\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationButton\cf6 .\cf13 backgroundColor\cf6  = [[\cf10 UIColor\cf6  \cf13 systemBlueColor\cf6 ] \cf13 colorWithAlphaComponent\cf6 :\cf15 0.8\cf6 ];\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationButton\cf6 .\cf13 layer\cf6 .\cf13 cornerRadius\cf6  = \cf15 10\cf6 ;\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationButton\cf6 .\cf13 titleLabel\cf6 .\cf13 font\cf6  = [\cf10 UIFont\cf6  \cf13 systemFontOfSize\cf6 :\cf15 18\cf6  \cf13 weight\cf6 :\cf13 UIFontWeightSemibold\cf6 ];\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationButton\cf6  \cf13 setTitleColor\cf6 :[\cf10 UIColor\cf6  \cf13 whiteColor\cf6 ] \cf13 forState\cf6 :\cf13 UIControlStateNormal\cf6 ];\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6  \cf13 addSubview\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationButton\cf6 ];\
+        \cf13 NSLog\cf6 (\cf4 @"setupUI: Added calibration button."\cf6 );\
+    \}\
+    \
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6  = [[\cf10 UILabel\cf6  \cf13 alloc\cf6 ] \cf13 init\cf6 ];\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 ) \{\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 .\cf13 textColor\cf6  = [\cf10 UIColor\cf6  \cf13 whiteColor\cf6 ];\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 .\cf13 backgroundColor\cf6  = [[\cf10 UIColor\cf6  \cf13 blackColor\cf6 ] \cf13 colorWithAlphaComponent\cf6 :\cf15 0.5\cf6 ];\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 .\cf13 textAlignment\cf6  = \cf13 NSTextAlignmentCenter\cf6 ;\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 .\cf13 layer\cf6 .\cf13 cornerRadius\cf6  = \cf15 5\cf6 ;\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 .\cf13 layer\cf6 .\cf13 masksToBounds\cf6  = 
+\f1\b \cf8 YES
+\f0\b0 \cf6 ;\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 .\cf13 font\cf6  = [\cf10 UIFont\cf6  \cf13 systemFontOfSize\cf6 :\cf15 14\cf6 ];\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 .\cf13 text\cf6  = \cf4 @"Initializing..."\cf6 ;\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6  \cf13 addSubview\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 ];\
+        \cf13 NSLog\cf6 (\cf4 @"setupUI: Added status label."\cf6 );\
+    \}\
+    \
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 detectionSwitch\cf6  = [[\cf10 UISwitch\cf6  \cf13 alloc\cf6 ] \cf13 init\cf6 ];\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 detectionSwitch\cf6 ) \{\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 detectionSwitch\cf6  \cf13 setOn\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 isDetectionActive\cf6  \cf13 animated\cf6 :
+\f1\b \cf8 NO
+\f0\b0 \cf6 ];\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 detectionSwitch\cf6  \cf13 addTarget\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf13 action\cf6 :
+\f1\b \cf8 @selector
+\f0\b0 \cf6 (detectionSwitchChanged:) \cf13 forControlEvents\cf6 :\cf13 UIControlEventValueChanged\cf6 ];\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 detectionSwitch\cf6 .\cf13 enabled\cf6  = 
+\f1\b \cf8 NO
+\f0\b0 \cf6 ;\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 detectionSwitch\cf6 .\cf13 alpha\cf6  = \cf15 0.5\cf6 ;\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6  \cf13 addSubview\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 detectionSwitch\cf6 ];\
+        \cf5 // Initially hide the switch; it will be revealed later.\cf6 \
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 detectionSwitch\cf6 .\cf13 hidden\cf6  = 
+\f1\b \cf8 YES
+\f0\b0 \cf6 ;\
+        \cf13 NSLog\cf6 (\cf4 @"setupUI: Added detection switch."\cf6 );\
+    \}\
+    \
+    \cf5 // Bring UI elements to front.\cf6 \
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorBlurView\cf6 ) [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6  \cf13 bringSubviewToFront\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorBlurView\cf6 ];\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 centralCircleBlurView\cf6 ) [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6  \cf13 bringSubviewToFront\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 centralCircleBlurView\cf6 ];\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationButton\cf6 ) [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6  \cf13 bringSubviewToFront\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationButton\cf6 ];\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 ) [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6  \cf13 bringSubviewToFront\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 ];\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 detectionSwitch\cf6 ) [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6  \cf13 bringSubviewToFront\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 detectionSwitch\cf6 ];\
+    \cf13 NSLog\cf6 (\cf4 @"setupUI: Set UI element order."\cf6 );\
+    \cf13 NSLog\cf6 (\cf4 @"setupUI: Completed."\cf6 );\
+\}\
+\
+\cf2 #pragma mark 
+\f1\b \cf7 - Core Motion & Calibration
+\f0\b0 \cf6 \
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 startMotionUpdates\cf6  \{\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (!
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 hasMotionPermission\cf6 ) \{ \cf13 NSLog\cf6 (\cf4 @"startMotionUpdates: Cannot start - motion permission not granted."\cf6 ); 
+\f1\b \cf8 return
+\f0\b0 \cf6 ; \}\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (!
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6 ) \{ \cf13 NSLog\cf6 (\cf4 @"Error: motionManager is nil in startMotionUpdates."\cf6 ); 
+\f1\b \cf8 return
+\f0\b0 \cf6 ; \}\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (!
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6 .\cf13 isDeviceMotionAvailable\cf6 ) \{ \cf13 NSLog\cf6 (\cf4 @"Motion sensor unavailable."\cf6 ); 
+\f1\b \cf8 return
+\f0\b0 \cf6 ; \}\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6 .\cf13 isDeviceMotionActive\cf6  && 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6 .\cf13 deviceMotionUpdateInterval\cf6  == \cf15 0.1\cf6 ) \{\
+        \cf13 NSLog\cf6 (\cf4 @"startMotionUpdates: Already running with correct interval."\cf6 );\
+        
+\f1\b \cf8 return
+\f0\b0 \cf6 ;\
+    \}\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6 .\cf13 isDeviceMotionActive\cf6 ) \{ [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6  \cf13 stopDeviceMotionUpdates\cf6 ]; \}\
+    \
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6 .\cf13 deviceMotionUpdateInterval\cf6  = \cf15 0.1\cf6 ;\
+    \cf13 NSLog\cf6 (\cf4 @"startMotionUpdates: Starting device motion updates."\cf6 );\
+    
+\f1\b \cf8 __weak
+\f0\b0 \cf6  
+\f1\b \cf8 typeof
+\f0\b0 \cf6 (
+\f1\b \cf8 self
+\f0\b0 \cf6 ) weakSelf = 
+\f1\b \cf8 self
+\f0\b0 \cf6 ;\
+    [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6  \cf13 startDeviceMotionUpdatesToQueue\cf6 :[\cf10 NSOperationQueue\cf6  \cf13 mainQueue\cf6 ]\
+                                           \cf13 withHandler\cf6 :^(\cf10 CMDeviceMotion\cf6  *motion, \cf10 NSError\cf6  *error) \{\
+        
+\f1\b \cf8 __strong
+\f0\b0 \cf6  
+\f1\b \cf8 typeof
+\f0\b0 \cf6 (weakSelf) strongSelf = weakSelf;\
+        
+\f1\b \cf8 if
+\f0\b0 \cf6  (!strongSelf || !motion) 
+\f1\b \cf8 return
+\f0\b0 \cf6 ;\
+        
+\f1\b \cf8 if
+\f0\b0 \cf6  (error) \{\
+            \cf13 NSLog\cf6 (\cf4 @"Motion update error: %@"\cf6 , error.\cf13 localizedDescription\cf6 );\
+            strongSelf.\cf14 isOrientationValid\cf6  = 
+\f1\b \cf8 NO
+\f0\b0 \cf6 ;\
+            [strongSelf \cf14 updateCalibrationUI\cf6 ];\
+            
+\f1\b \cf8 return
+\f0\b0 \cf6 ;\
+        \}\
+        
+\f1\b \cf8 double
+\f0\b0 \cf6  pitch = motion.\cf13 attitude\cf6 .\cf13 pitch\cf6 ;\
+        
+\f1\b \cf8 double
+\f0\b0 \cf6  roll  = motion.\cf13 attitude\cf6 .\cf13 roll\cf6 ;\
+        
+\f1\b \cf8 BOOL
+\f0\b0 \cf6  valid = \cf2 fabs\cf6 (pitch) < \cf15 0.4\cf6  && \cf2 fabs\cf6 (roll) < \cf15 0.3\cf6 ;\
+        
+\f1\b \cf8 if
+\f0\b0 \cf6  (valid != strongSelf.\cf14 isOrientationValid\cf6 ) \{\
+            strongSelf.\cf14 isOrientationValid\cf6  = valid;\
+            \cf13 NSLog\cf6 (\cf4 @"Orientation validity changed: %d"\cf6 , valid);\
+            [strongSelf \cf14 updateCalibrationUI\cf6 ];\
+        \}\
+    \}];\
+\}\
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 calibrationButtonTapped\cf6 :(\cf10 UIButton\cf6  *)sender \{\
+    \cf13 NSLog\cf6 (\cf4 @"Calibration button tapped. Current state: %ld"\cf6 , (
+\f1\b \cf8 long
+\f0\b0 \cf6 )
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationState\cf6 );\
+    \
+    \cf5 // For the Idle state, this button acts as the \'93Continue\'94 button.\cf6 \
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationState\cf6  == \cf14 CalibrationStateIdle\cf6 ) \{\
+        \cf5 // Animate fade from gray to clear to reveal the camera feed.\cf6 \
+        [\cf10 UIView\cf6  \cf13 animateWithDuration\cf6 :\cf15 0.5\cf6  \cf13 animations\cf6 :^\{\
+            
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6 .\cf13 backgroundColor\cf6  = [\cf10 UIColor\cf6  \cf13 clearColor\cf6 ];\
+        \} \cf13 completion\cf6 :^(
+\f1\b \cf8 BOOL
+\f0\b0 \cf6  finished) \{\
+            \cf5 // Reveal the detection switch after fade.\cf6 \
+            
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 detectionSwitch\cf6 .\cf13 hidden\cf6  = 
+\f1\b \cf8 NO
+\f0\b0 \cf6 ;\
+            \cf5 // Advance to calibration.\cf6 \
+            
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationState\cf6  = \cf14 CalibrationStateLookingUp\cf6 ;\
+            [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 startMotionUpdatesForCalibration\cf6 ];\
+            [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 updateCalibrationUI\cf6 ];\
+        \}];\
+        
+\f1\b \cf8 return
+\f0\b0 \cf6 ;\
+    \}\
+    \
+    \cf5 // For subsequent states, proceed with calibration logic.\cf6 \
+    
+\f1\b \cf8 switch
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationState\cf6 ) \{\
+        
+\f1\b \cf8 case
+\f0\b0 \cf6  \cf14 CalibrationStateLookingUp\cf6 :\
+            
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationState\cf6  = \cf14 CalibrationStateLookingStraight\cf6 ;\
+            
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6 ) [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6  \cf13 stopDeviceMotionUpdates\cf6 ];\
+            
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 hasMotionPermission\cf6  && !
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6 .\cf13 isDeviceMotionActive\cf6 ) [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 startMotionUpdates\cf6 ];\
+            
+\f1\b \cf8 break
+\f0\b0 \cf6 ;\
+        
+\f1\b \cf8 case
+\f0\b0 \cf6  \cf14 CalibrationStateLookingStraight\cf6 :\
+            
+\f1\b \cf8 if
+\f0\b0 \cf6  (!
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 hasMotionPermission\cf6 ) \{\
+                [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 showPermissionAlert\cf6 :\cf4 @"Motion Access Required"\cf6  \cf14 message\cf6 :\cf4 @"Calibration requires motion data. Please enable it in Settings."\cf6 ];\
+                [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 resetCalibration\cf6 ];\
+                
+\f1\b \cf8 return
+\f0\b0 \cf6 ;\
+            \}\
+            
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationState\cf6  = \cf14 CalibrationStateLookingDown\cf6 ;\
+            [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 startMotionUpdatesForCalibration\cf6 ];\
+            
+\f1\b \cf8 break
+\f0\b0 \cf6 ;\
+        
+\f1\b \cf8 case
+\f0\b0 \cf6  \cf14 CalibrationStateLookingDown\cf6 :\
+            [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 calculateFloorOffset\cf6 ];\
+            
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationState\cf6  = \cf14 CalibrationStateCalibrated\cf6 ;\
+            
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6 ) [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6  \cf13 stopDeviceMotionUpdates\cf6 ];\
+            
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 hasMotionPermission\cf6  && !
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6 .\cf13 isDeviceMotionActive\cf6 ) [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 startMotionUpdates\cf6 ];\
+            
+\f1\b \cf8 break
+\f0\b0 \cf6 ;\
+        
+\f1\b \cf8 case
+\f0\b0 \cf6  \cf14 CalibrationStateCalibrated\cf6 :\
+            [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 resetCalibration\cf6 ];\
+            
+\f1\b \cf8 break
+\f0\b0 \cf6 ;\
+        
+\f1\b \cf8 default
+\f0\b0 \cf6 :\
+            
+\f1\b \cf8 break
+\f0\b0 \cf6 ;\
+    \}\
+    [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 updateCalibrationUI\cf6 ];\
+\}\
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 startMotionUpdatesForCalibration\cf6  \{\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (!
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 hasMotionPermission\cf6 ) \{\
+        \cf13 NSLog\cf6 (\cf4 @"startMotionUpdatesForCalibration: Cannot start - motion permission not granted."\cf6 );\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 showPermissionAlert\cf6 :\cf4 @"Motion Access Required"\cf6  \cf14 message\cf6 :\cf4 @"Calibration requires motion data. Please enable it in Settings."\cf6 ];\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 resetCalibration\cf6 ];\
+        
+\f1\b \cf8 return
+\f0\b0 \cf6 ;\
+    \}\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (!
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6 ) \{ \cf13 NSLog\cf6 (\cf4 @"Error: motionManager is nil in startMotionUpdatesForCalibration."\cf6 ); 
+\f1\b \cf8 return
+\f0\b0 \cf6 ; \}\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (!
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6 .\cf13 isDeviceMotionAvailable\cf6 ) \{\
+        \cf13 NSLog\cf6 (\cf4 @"Motion sensor unavailable for calibration."\cf6 );\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 resetCalibration\cf6 ];\
+        
+\f1\b \cf8 return
+\f0\b0 \cf6 ;\
+    \}\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6 .\cf13 isDeviceMotionActive\cf6 ) \{ [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6  \cf13 stopDeviceMotionUpdates\cf6 ]; \}\
+    \
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6 .\cf13 deviceMotionUpdateInterval\cf6  = \cf15 0.05\cf6 ;\
+    \cf13 NSLog\cf6 (\cf4 @"startMotionUpdatesForCalibration: Starting specific motion updates."\cf6 );\
+    
+\f1\b \cf8 __weak
+\f0\b0 \cf6  
+\f1\b \cf8 typeof
+\f0\b0 \cf6 (
+\f1\b \cf8 self
+\f0\b0 \cf6 ) weakSelf = 
+\f1\b \cf8 self
+\f0\b0 \cf6 ;\
+    [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6  \cf13 startDeviceMotionUpdatesToQueue\cf6 :[\cf10 NSOperationQueue\cf6  \cf13 mainQueue\cf6 ]\
+                                           \cf13 withHandler\cf6 :^(\cf10 CMDeviceMotion\cf6  *motion, \cf10 NSError\cf6  *error) \{\
+        
+\f1\b \cf8 __strong
+\f0\b0 \cf6  
+\f1\b \cf8 typeof
+\f0\b0 \cf6 (weakSelf) strongSelf = weakSelf;\
+        
+\f1\b \cf8 if
+\f0\b0 \cf6  (!strongSelf || !motion) 
+\f1\b \cf8 return
+\f0\b0 \cf6 ;\
+        
+\f1\b \cf8 if
+\f0\b0 \cf6  (error) \{\
+            \cf13 NSLog\cf6 (\cf4 @"Calibration motion error: %@"\cf6 , error.\cf13 localizedDescription\cf6 );\
+            [strongSelf \cf14 resetCalibration\cf6 ];\
+            
+\f1\b \cf8 return
+\f0\b0 \cf6 ;\
+        \}\
+        [strongSelf \cf14 handleCalibrationMotionWithPitch\cf6 :motion.\cf13 attitude\cf6 .\cf13 pitch\cf6 ];\
+    \}];\
+\}\
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 handleCalibrationMotionWithPitch\cf6 :(
+\f1\b \cf8 double
+\f0\b0 \cf6 )pitch \{\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationState\cf6  == \cf14 CalibrationStateLookingUp\cf6 ) \{\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 referencePitchUp\cf6  = \cf15 @(\cf6 pitch\cf15 )\cf6 ;\
+    \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationState\cf6  == \cf14 CalibrationStateLookingDown\cf6 ) \{\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 referencePitchDown\cf6  = \cf15 @(\cf6 pitch\cf15 )\cf6 ;\
+    \}\
+\}\
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 calculateFloorOffset\cf6  \{\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (!
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 referencePitchUp\cf6  || !
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 referencePitchDown\cf6 ) \{\
+        \cf13 NSLog\cf6 (\cf4 @"Error: Missing pitch references for offset calculation."\cf6 );\
+        \cf13 dispatch_async\cf6 (\cf13 dispatch_get_main_queue\cf6 (), ^\{\
+            
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 ) \{\
+                
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 .\cf13 text\cf6  = \cf4 @"Calibration Error: Missing Data"\cf6 ;\
+                
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 .\cf13 backgroundColor\cf6  = [[\cf10 UIColor\cf6  \cf13 redColor\cf6 ] \cf13 colorWithAlphaComponent\cf6 :\cf15 0.6\cf6 ];\
+            \}\
+        \});\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 resetCalibration\cf6 ];\
+        
+\f1\b \cf8 return
+\f0\b0 \cf6 ;\
+    \}\
+    
+\f1\b \cf8 double
+\f0\b0 \cf6  up = [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 referencePitchUp\cf6  \cf13 doubleValue\cf6 ];\
+    
+\f1\b \cf8 double
+\f0\b0 \cf6  down = [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 referencePitchDown\cf6  \cf13 doubleValue\cf6 ];\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (down >= up) \{\
+        \cf13 NSLog\cf6 (\cf4 @"Warning: Down pitch (%f) >= Up pitch (%f). Calibration might be inaccurate."\cf6 , down, up);\
+    \}\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorPitchOffset\cf6  = \cf15 @(\cf6 down\cf15 )\cf6 ;\
+    \cf13 NSLog\cf6 (\cf4 @"Calibration Offset Calculated: Up=%.3f, Down=%.3f, Stored Offset=%.3f"\cf6 , up, down, [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorPitchOffset\cf6  \cf13 doubleValue\cf6 ]);\
+\}\
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 detectionSwitchChanged\cf6 :(\cf10 UISwitch\cf6  *)sender \{\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 isDetectionActive\cf6  = sender.\cf13 isOn\cf6 ;\
+    \cf13 NSLog\cf6 (\cf4 @"Detection Switch Toggled: %@"\cf6 , 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 isDetectionActive\cf6  ? \cf4 @"ON"\cf6  : \cf4 @"OFF"\cf6 );\
+    [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 updateCalibrationUI\cf6 ];\
+\}\
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 resetCalibration\cf6  \{\
+    \cf13 NSLog\cf6 (\cf4 @"Resetting Calibration."\cf6 );\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationState\cf6  = \cf14 CalibrationStateIdle\cf6 ;\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 referencePitchUp\cf6  = 
+\f1\b \cf8 nil
+\f0\b0 \cf6 ;\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 referencePitchDown\cf6  = 
+\f1\b \cf8 nil
+\f0\b0 \cf6 ;\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorPitchOffset\cf6  = 
+\f1\b \cf8 nil
+\f0\b0 \cf6 ;\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorWallIntersectionY\cf6  = 
+\f1\b \cf8 nil
+\f0\b0 \cf6 ;\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6  && 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6 .\cf13 deviceMotionUpdateInterval\cf6  == \cf15 0.05\cf6 ) \{\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6  \cf13 stopDeviceMotionUpdates\cf6 ];\
+    \}\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 hasMotionPermission\cf6  && 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6  && !
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 motionManager\cf6 .\cf13 isDeviceMotionActive\cf6 ) \{\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 startMotionUpdates\cf6 ];\
+    \}\
+    [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 updateCalibrationUI\cf6 ];\
+    [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 updateFloorBlurViewFrame\cf6 ];\
+\}\
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 updateCalibrationUI\cf6  \{\
+    \cf10 NSString\cf6  *buttonTitle = \cf4 @""\cf6 ;\
+    \cf10 NSString\cf6  *statusText = \cf4 @""\cf6 ;\
+    \cf10 UIColor\cf6  *statusColor = [[\cf10 UIColor\cf6  \cf13 blackColor\cf6 ] \cf13 colorWithAlphaComponent\cf6 :\cf15 0.5\cf6 ];\
+    
+\f1\b \cf8 BOOL
+\f0\b0 \cf6  permissionsGranted = 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 hasCameraPermission\cf6  && 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 hasMotionPermission\cf6 ;\
+    \
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (!
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 hasCameraPermission\cf6 ) \{\
+        statusText = \cf4 @"Enable Camera Access In Settings"\cf6 ;\
+        statusColor = [[\cf10 UIColor\cf6  \cf13 redColor\cf6 ] \cf13 colorWithAlphaComponent\cf6 :\cf15 0.6\cf6 ];\
+        buttonTitle = \cf4 @"Permissions Needed"\cf6 ;\
+    \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  
+\f1\b \cf8 if
+\f0\b0 \cf6  (!
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 hasMotionPermission\cf6 ) \{\
+        statusText = \cf4 @"Enable Motion Access In Settings"\cf6 ;\
+        statusColor = [[\cf10 UIColor\cf6  \cf13 redColor\cf6 ] \cf13 colorWithAlphaComponent\cf6 :\cf15 0.6\cf6 ];\
+        buttonTitle = \cf4 @"Permissions Needed"\cf6 ;\
+    \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  \{\
+        
+\f1\b \cf8 switch
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationState\cf6 ) \{\
+            
+\f1\b \cf8 case
+\f0\b0 \cf6  \cf14 CalibrationStateIdle\cf6 :\
+                buttonTitle = \cf4 @"Continue"\cf6 ;\
+                statusText = \cf4 @"Ready to continue"\cf6 ;\
+                statusColor = [[\cf10 UIColor\cf6  \cf13 systemBlueColor\cf6 ] \cf13 colorWithAlphaComponent\cf6 :\cf15 0.6\cf6 ];\
+                
+\f1\b \cf8 break
+\f0\b0 \cf6 ;\
+            
+\f1\b \cf8 case
+\f0\b0 \cf6  \cf14 CalibrationStateLookingUp\cf6 :\
+                buttonTitle = \cf4 @"Tap When Looking UP"\cf6 ;\
+                statusText = \cf4 @"Aim UP at wall/ceiling junction"\cf6 ;\
+                statusColor = [[\cf10 UIColor\cf6  \cf13 purpleColor\cf6 ] \cf13 colorWithAlphaComponent\cf6 :\cf15 0.6\cf6 ];\
+                
+\f1\b \cf8 break
+\f0\b0 \cf6 ;\
+            
+\f1\b \cf8 case
+\f0\b0 \cf6  \cf14 CalibrationStateLookingStraight\cf6 :\
+                buttonTitle = \cf4 @"Tap When Looking STRAIGHT"\cf6 ;\
+                statusText = \cf4 @"Aim STRAIGHT ahead"\cf6 ;\
+                statusColor = [[\cf10 UIColor\cf6  \cf13 purpleColor\cf6 ] \cf13 colorWithAlphaComponent\cf6 :\cf15 0.6\cf6 ];\
+                
+\f1\b \cf8 break
+\f0\b0 \cf6 ;\
+            
+\f1\b \cf8 case
+\f0\b0 \cf6  \cf14 CalibrationStateLookingDown\cf6 :\
+                buttonTitle = \cf4 @"Tap When Looking DOWN"\cf6 ;\
+                statusText = \cf4 @"Aim DOWN at floor/wall junction"\cf6 ;\
+                statusColor = [[\cf10 UIColor\cf6  \cf13 purpleColor\cf6 ] \cf13 colorWithAlphaComponent\cf6 :\cf15 0.6\cf6 ];\
+                
+\f1\b \cf8 break
+\f0\b0 \cf6 ;\
+            
+\f1\b \cf8 case
+\f0\b0 \cf6  \cf14 CalibrationStateCalibrated\cf6 : \{\
+                buttonTitle = \cf4 @"Recalibrate"\cf6 ;\
+                \cf10 NSString\cf6  *detectionStatus = 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 isDetectionActive\cf6  ? \cf4 @"Detecting Floor"\cf6  : \cf4 @"Detection Paused"\cf6 ;\
+                statusText = 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 isOrientationValid\cf6  ? [\cf10 NSString\cf6  \cf13 stringWithFormat\cf6 :\cf4 @"Calibrated - %@"\cf6 , detectionStatus] : \cf4 @"Hold device level"\cf6 ;\
+                statusColor = 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 isOrientationValid\cf6  ? [[\cf10 UIColor\cf6  \cf13 systemGreenColor\cf6 ] \cf13 colorWithAlphaComponent\cf6 :\cf15 0.6\cf6 ] : [[\cf10 UIColor\cf6  \cf13 orangeColor\cf6 ] \cf13 colorWithAlphaComponent\cf6 :\cf15 0.6\cf6 ];\
+            \}\
+                
+\f1\b \cf8 break
+\f0\b0 \cf6 ;\
+        \}\
+    \}\
+    \
+    \cf13 dispatch_async\cf6 (\cf13 dispatch_get_main_queue\cf6 (), ^\{\
+        
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationButton\cf6 ) \{\
+            [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationButton\cf6  \cf13 setTitle\cf6 :buttonTitle \cf13 forState\cf6 :\cf13 UIControlStateNormal\cf6 ];\
+            
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationButton\cf6 .\cf13 enabled\cf6  = permissionsGranted;\
+            
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationButton\cf6 .\cf13 alpha\cf6  = 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationButton\cf6 .\cf13 enabled\cf6  ? \cf15 1.0\cf6  : \cf15 0.5\cf6 ;\
+        \}\
+        
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 ) \{\
+            
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 .\cf13 text\cf6  = statusText;\
+            
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 statusLabel\cf6 .\cf13 backgroundColor\cf6  = statusColor;\
+        \}\
+        
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 detectionSwitch\cf6 ) \{\
+            
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 detectionSwitch\cf6 .\cf13 enabled\cf6  = permissionsGranted;\
+            
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 detectionSwitch\cf6 .\cf13 alpha\cf6  = 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 detectionSwitch\cf6 .\cf13 enabled\cf6  ? \cf15 1.0\cf6  : \cf15 0.5\cf6 ;\
+            [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 detectionSwitch\cf6  \cf13 setOn\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 isDetectionActive\cf6  \cf13 animated\cf6 :
+\f1\b \cf8 NO
+\f0\b0 \cf6 ];\
+        \}\
+    \});\
+\}\
+\
+\cf2 #pragma mark 
+\f1\b \cf7 - Vision Processing
+\f0\b0 \cf6 \
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 captureOutput\cf6 :(\cf10 AVCaptureOutput\cf6  *)output \cf11 didOutputSampleBuffer\cf6 :(\cf10 CMSampleBufferRef\cf6 )sampleBuffer \cf11 fromConnection\cf6 :(\cf10 AVCaptureConnection\cf6  *)connection \{\
+    
+\f1\b \cf8 static
+\f0\b0 \cf6  \cf10 dispatch_once_t\cf6  onceToken;\
+    \cf2 dispatch_once\cf6 (&onceToken, ^\{\
+        \cf13 NSLog\cf6 (\cf4 @"<<<<<<<<<< captureOutput: First frame received! >>>>>>>>>>"\cf6 );\
+    \});\
+    \
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (!
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 isDetectionActive\cf6 ) \{\
+        
+\f1\b \cf8 return
+\f0\b0 \cf6 ;\
+    \}\
+    \
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (!
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 isOrientationValid\cf6 ) \{\
+        
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6  && 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorWallIntersectionY\cf6  != 
+\f1\b \cf8 nil
+\f0\b0 \cf6 ) \{\
+            \cf13 dispatch_async\cf6 (\cf13 dispatch_get_main_queue\cf6 (), ^\{\
+                
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6  && !
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 isOrientationValid\cf6  && 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorWallIntersectionY\cf6  != 
+\f1\b \cf8 nil
+\f0\b0 \cf6 ) \{\
+                    \cf13 NSLog\cf6 (\cf4 @"Orientation invalid, resetting floor Y."\cf6 );\
+                    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorWallIntersectionY\cf6  = 
+\f1\b \cf8 nil
+\f0\b0 \cf6 ;\
+                    [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 updateFloorBlurViewFrame\cf6 ];\
+                \}\
+            \});\
+        \}\
+        
+\f1\b \cf8 return
+\f0\b0 \cf6 ;\
+    \}\
+    \
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (!
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 horizonRequest\cf6 ) \{\
+        \cf13 NSLog\cf6 (\cf4 @"captureOutput: Horizon request is nil, cannot process frame."\cf6 );\
+        
+\f1\b \cf8 return
+\f0\b0 \cf6 ;\
+    \}\
+    \
+    \cf10 CVImageBufferRef\cf6  pixelBuffer = \cf13 CMSampleBufferGetImageBuffer\cf6 (sampleBuffer);\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (!pixelBuffer) \{ \cf13 NSLog\cf6 (\cf4 @"Error: Failed to get pixel buffer from sample buffer."\cf6 ); 
+\f1\b \cf8 return
+\f0\b0 \cf6 ; \}\
+    \
+    \cf10 CGImagePropertyOrientation\cf6  orientation = [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 currentCGImageOrientationForBuffer\cf6 ];\
+    \cf10 VNImageRequestHandler\cf6  *handler = [[\cf10 VNImageRequestHandler\cf6  \cf13 alloc\cf6 ] \cf13 initWithCVPixelBuffer\cf6 :pixelBuffer \cf13 orientation\cf6 :orientation \cf13 options\cf6 :\cf15 @\{\}\cf6 ];\
+    \
+    \cf10 NSError\cf6  *error = 
+\f1\b \cf8 nil
+\f0\b0 \cf6 ;\
+    
+\f1\b \cf8 BOOL
+\f0\b0 \cf6  success = [handler \cf13 performRequests\cf6 :\cf15 @[
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 horizonRequest\cf15 ]\cf6  \cf13 error\cf6 :&error];\
+    \
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (!success || error) \{\
+        \cf13 NSLog\cf6 (\cf4 @"Error performing Vision request from captureOutput: %@"\cf6 , error.\cf13 localizedDescription\cf6  ?: \cf4 @"Unknown Vision error"\cf6 );\
+    \}\
+\}\
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 processHorizonObservation\cf6 :(\cf10 VNHorizonObservation\cf6  *)observation \{\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (!
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 previewLayer\cf6 ) \{\
+        \cf13 NSLog\cf6 (\cf4 @"Error: previewLayer is nil in processHorizonObservation"\cf6 );\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorWallIntersectionY\cf6  = 
+\f1\b \cf8 nil
+\f0\b0 \cf6 ;\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 updateFloorBlurViewFrame\cf6 ];\
+        
+\f1\b \cf8 return
+\f0\b0 \cf6 ;\
+    \}\
+    \
+    \cf10 CGFloat\cf6  angle = observation.\cf13 angle\cf6 ;\
+    \cf10 CGFloat\cf6  viewHeight = 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6 .\cf13 bounds\cf6 .\cf13 size\cf6 .\cf13 height\cf6 ;\
+    \cf10 CGFloat\cf6  maxAngle = \cf2 M_PI\cf6  / \cf15 4.0\cf6 ;\
+    \cf10 CGFloat\cf6  offsetRange = viewHeight * \cf15 0.4\cf6 ;\
+    \cf10 CGFloat\cf6  centerVertical = viewHeight / \cf15 2.0\cf6 ;\
+    \cf10 CGFloat\cf6  clampedAngle = \cf2 MAX\cf6 (-maxAngle, \cf2 MIN\cf6 (angle, maxAngle));\
+    \cf10 CGFloat\cf6  scaledOffset = (clampedAngle / maxAngle) * offsetRange;\
+    \cf10 CGFloat\cf6  estimatedY = centerVertical + scaledOffset;\
+    \
+    \cf10 CGFloat\cf6  tolerance = \cf15 5.0\cf6 ;\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (!\cf2 isfinite\cf6 (estimatedY) || estimatedY < -tolerance || estimatedY > (viewHeight + tolerance)) \{\
+        
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorWallIntersectionY\cf6  != 
+\f1\b \cf8 nil
+\f0\b0 \cf6 ) \{\
+            
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorWallIntersectionY\cf6  = 
+\f1\b \cf8 nil
+\f0\b0 \cf6 ;\
+            [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 updateFloorBlurViewFrame\cf6 ];\
+        \}\
+        
+\f1\b \cf8 return
+\f0\b0 \cf6 ;\
+    \}\
+    \cf10 CGFloat\cf6  detectedY = \cf2 MAX\cf6 (\cf15 0\cf6 , \cf2 MIN\cf6 (estimatedY, viewHeight));\
+    
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorWallIntersectionY\cf6  = \cf15 @(\cf6 detectedY\cf15 )\cf6 ;\
+    [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 updateFloorBlurViewFrame\cf6 ];\
+\}\
+\
+- (\cf10 CGImagePropertyOrientation\cf6 )\cf11 currentCGImageOrientationForBuffer\cf6  \{\
+    \cf10 CGImagePropertyOrientation\cf6  cgOrientation = \cf13 kCGImagePropertyOrientationRight\cf6 ;\
+    \
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 videoDataOutput\cf6 ) \{\
+        \cf10 AVCaptureConnection\cf6  *connection = [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 videoDataOutput\cf6  \cf13 connectionWithMediaType\cf6 :\cf13 AVMediaTypeVideo\cf6 ];\
+        
+\f1\b \cf8 if
+\f0\b0 \cf6  (connection) \{\
+            \cf10 CGFloat\cf6  angle = connection.\cf13 videoRotationAngle\cf6 ;\
+            
+\f1\b \cf8 switch
+\f0\b0 \cf6  ((
+\f1\b \cf8 int
+\f0\b0 \cf6 )\cf2 round\cf6 (angle)) \{\
+                
+\f1\b \cf8 case
+\f0\b0 \cf6  \cf15 0\cf6 :   cgOrientation = \cf13 kCGImagePropertyOrientationUp\cf6 ; 
+\f1\b \cf8 break
+\f0\b0 \cf6 ;\
+                
+\f1\b \cf8 case
+\f0\b0 \cf6  \cf15 90\cf6 :  cgOrientation = \cf13 kCGImagePropertyOrientationRight\cf6 ; 
+\f1\b \cf8 break
+\f0\b0 \cf6 ;\
+                
+\f1\b \cf8 case
+\f0\b0 \cf6  \cf15 180\cf6 : cgOrientation = \cf13 kCGImagePropertyOrientationDown\cf6 ; 
+\f1\b \cf8 break
+\f0\b0 \cf6 ;\
+                
+\f1\b \cf8 case
+\f0\b0 \cf6  \cf15 270\cf6 : cgOrientation = \cf13 kCGImagePropertyOrientationLeft\cf6 ; 
+\f1\b \cf8 break
+\f0\b0 \cf6 ;\
+                
+\f1\b \cf8 default
+\f0\b0 \cf6 :  cgOrientation = \cf13 kCGImagePropertyOrientationRight\cf6 ; 
+\f1\b \cf8 break
+\f0\b0 \cf6 ;\
+            \}\
+            
+\f1\b \cf8 return
+\f0\b0 \cf6  cgOrientation;\
+        \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  \{\
+            \cf13 NSLog\cf6 (\cf4 @"Warning: Could not get video connection in currentCGImageOrientationForBuffer."\cf6 );\
+        \}\
+    \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  \{\
+        \cf13 NSLog\cf6 (\cf4 @"Warning: videoDataOutput is nil in currentCGImageOrientationForBuffer."\cf6 );\
+    \}\
+    \
+    \cf13 NSLog\cf6 (\cf4 @"Warning: Falling back to device orientation for CGImageOrientation."\cf6 );\
+    \cf10 UIDeviceOrientation\cf6  deviceOrientation = [\cf10 UIDevice\cf6  \cf13 currentDevice\cf6 ].\cf13 orientation\cf6 ;\
+    
+\f1\b \cf8 switch
+\f0\b0 \cf6  (deviceOrientation) \{\
+        
+\f1\b \cf8 case
+\f0\b0 \cf6  \cf13 UIDeviceOrientationPortrait\cf6 :           cgOrientation = \cf13 kCGImagePropertyOrientationRight\cf6 ; 
+\f1\b \cf8 break
+\f0\b0 \cf6 ;\
+        
+\f1\b \cf8 case
+\f0\b0 \cf6  \cf13 UIDeviceOrientationPortraitUpsideDown\cf6 : cgOrientation = \cf13 kCGImagePropertyOrientationLeft\cf6 ; 
+\f1\b \cf8 break
+\f0\b0 \cf6 ;\
+        
+\f1\b \cf8 case
+\f0\b0 \cf6  \cf13 UIDeviceOrientationLandscapeLeft\cf6 :      cgOrientation = \cf13 kCGImagePropertyOrientationUp\cf6 ; 
+\f1\b \cf8 break
+\f0\b0 \cf6 ;\
+        
+\f1\b \cf8 case
+\f0\b0 \cf6  \cf13 UIDeviceOrientationLandscapeRight\cf6 :     cgOrientation = \cf13 kCGImagePropertyOrientationDown\cf6 ; 
+\f1\b \cf8 break
+\f0\b0 \cf6 ;\
+        
+\f1\b \cf8 default
+\f0\b0 \cf6 :                                    cgOrientation = \cf13 kCGImagePropertyOrientationRight\cf6 ; 
+\f1\b \cf8 break
+\f0\b0 \cf6 ;\
+    \}\
+    
+\f1\b \cf8 return
+\f0\b0 \cf6  cgOrientation;\
+\}\
+\
+\cf2 #pragma mark 
+\f1\b \cf7 - Blur & Mask Effects
+\f0\b0 \cf6 \
+\
+- (\cf10 CGRect\cf6 )\cf11 calculateFloorBlurFrame\cf6  \{\
+    \cf10 CGRect\cf6  targetFrame;\
+    \cf10 CGFloat\cf6  viewWidth = 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6 .\cf13 bounds\cf6 .\cf13 size\cf6 .\cf13 width\cf6 ;\
+    \cf10 CGFloat\cf6  viewHeight = 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf13 view\cf6 .\cf13 bounds\cf6 .\cf13 size\cf6 .\cf13 height\cf6 ;\
+    \
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 calibrationState\cf6  == \cf14 CalibrationStateCalibrated\cf6  && 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 isDetectionActive\cf6  && 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorWallIntersectionY\cf6  != 
+\f1\b \cf8 nil
+\f0\b0 \cf6 ) \{\
+        \cf10 CGFloat\cf6  floorY = \cf2 MAX\cf6 (\cf15 0\cf6 , \cf2 MIN\cf6 ([
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorWallIntersectionY\cf6  \cf13 doubleValue\cf6 ], viewHeight));\
+        \cf10 CGFloat\cf6  blurHeight = \cf2 MAX\cf6 (\cf15 0\cf6 , viewHeight - floorY);\
+        targetFrame = \cf13 CGRectMake\cf6 (\cf15 0\cf6 , floorY, viewWidth, blurHeight);\
+    \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  \{\
+        \cf10 CGFloat\cf6  defaultHeight = 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 defaultBottomBlurFrame\cf6 .\cf13 size\cf6 .\cf13 height\cf6 ;\
+        
+\f1\b \cf8 if
+\f0\b0 \cf6  (defaultHeight <= \cf15 0\cf6 ) defaultHeight = \cf15 200.0\cf6 ;\
+        targetFrame = \cf13 CGRectMake\cf6 (\cf15 0\cf6 , viewHeight - defaultHeight, viewWidth, defaultHeight);\
+    \}\
+    
+\f1\b \cf8 return
+\f0\b0 \cf6  targetFrame;\
+\}\
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 updateFloorBlurViewFrame\cf6  \{\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (!
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorBlurView\cf6 ) \{ 
+\f1\b \cf8 return
+\f0\b0 \cf6 ; \}\
+    \
+    \cf10 CGRect\cf6  targetFrame = [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 calculateFloorBlurFrame\cf6 ];\
+    \cf10 CGFloat\cf6  tolerance = \cf15 1.0\cf6 ;\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (\cf2 fabs\cf6 (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorBlurView\cf6 .\cf13 frame\cf6 .\cf13 origin\cf6 .\cf13 y\cf6  - targetFrame.\cf13 origin\cf6 .\cf13 y\cf6 ) < tolerance &&\
+        \cf2 fabs\cf6 (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorBlurView\cf6 .\cf13 frame\cf6 .\cf13 size\cf6 .\cf13 height\cf6  - targetFrame.\cf13 size\cf6 .\cf13 height\cf6 ) < tolerance &&\
+        \cf2 fabs\cf6 (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorBlurView\cf6 .\cf13 frame\cf6 .\cf13 size\cf6 .\cf13 width\cf6  - targetFrame.\cf13 size\cf6 .\cf13 width\cf6 ) < tolerance) \{\
+        
+\f1\b \cf8 return
+\f0\b0 \cf6 ;\
+    \}\
+    \
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  ([\cf10 NSThread\cf6  \cf13 isMainThread\cf6 ]) \{\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 performBlurFrameAnimation\cf6 :targetFrame];\
+    \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  \{\
+        \cf13 dispatch_async\cf6 (\cf13 dispatch_get_main_queue\cf6 (), ^\{\
+            [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 performBlurFrameAnimation\cf6 :targetFrame];\
+        \});\
+    \}\
+\}\
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 performBlurFrameAnimation\cf6 :(\cf10 CGRect\cf6 )targetFrame \{\
+    [\cf10 UIView\cf6  \cf13 animateWithDuration\cf6 :\cf15 0.1\cf6 \
+                          \cf13 delay\cf6 :\cf15 0.0\cf6 \
+                        \cf13 options\cf6 :\cf13 UIViewAnimationOptionBeginFromCurrentState\cf6  | \cf13 UIViewAnimationOptionCurveEaseOut\cf6 \
+                     \cf13 animations\cf6 :^\{\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorBlurView\cf6 .\cf13 frame\cf6  = targetFrame;\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 updateGradientMaskFrameForView\cf6 :
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 floorBlurView\cf6 ];\
+    \} \cf13 completion\cf6 :
+\f1\b \cf8 nil
+\f0\b0 \cf6 ];\
+\}\
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 applyGradientMaskToView\cf6 :(\cf10 UIVisualEffectView\cf6  *)view \{\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (!view) 
+\f1\b \cf8 return
+\f0\b0 \cf6 ;\
+    \cf10 CAGradientLayer\cf6  *mask = [\cf10 CAGradientLayer\cf6  \cf13 layer\cf6 ];\
+    mask.\cf13 colors\cf6  = \cf15 @[\cf6 (
+\f1\b \cf8 id
+\f0\b0 \cf6 )[\cf10 UIColor\cf6  \cf13 clearColor\cf6 ].\cf13 CGColor\cf6 ,\
+                    (
+\f1\b \cf8 id
+\f0\b0 \cf6 )[[\cf10 UIColor\cf6  \cf13 blackColor\cf6 ] \cf13 colorWithAlphaComponent\cf6 :\cf15 0.5\cf6 ].\cf13 CGColor\cf6 ,\
+                    (
+\f1\b \cf8 id
+\f0\b0 \cf6 )[\cf10 UIColor\cf6  \cf13 blackColor\cf6 ].\cf13 CGColor\cf6 ,\
+                    (
+\f1\b \cf8 id
+\f0\b0 \cf6 )[\cf10 UIColor\cf6  \cf13 blackColor\cf6 ].\cf13 CGColor\cf15 ]\cf6 ;\
+    mask.\cf13 locations\cf6  = \cf15 @[@0.0\cf6 , \cf15 @0.15\cf6 , \cf15 @0.4\cf6 , \cf15 @1.0]\cf6 ;\
+    mask.\cf13 startPoint\cf6  = \cf13 CGPointMake\cf6 (\cf15 0.5\cf6 , \cf15 0.0\cf6 );\
+    mask.\cf13 endPoint\cf6  = \cf13 CGPointMake\cf6 (\cf15 0.5\cf6 , \cf15 1.0\cf6 );\
+    view.\cf13 layer\cf6 .\cf13 mask\cf6  = mask;\
+\}\
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 updateGradientMaskFrameForView\cf6 :(\cf10 UIVisualEffectView\cf6  *)view \{\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (view && view.\cf13 layer\cf6 .\cf13 mask\cf6 ) \{\
+        
+\f1\b \cf8 if
+\f0\b0 \cf6  ([\cf10 NSThread\cf6  \cf13 isMainThread\cf6 ]) \{\
+            view.\cf13 layer\cf6 .\cf13 mask\cf6 .\cf13 frame\cf6  = view.\cf13 bounds\cf6 ;\
+        \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  \{\
+            \cf13 dispatch_async\cf6 (\cf13 dispatch_get_main_queue\cf6 (), ^\{\
+                view.\cf13 layer\cf6 .\cf13 mask\cf6 .\cf13 frame\cf6  = view.\cf13 bounds\cf6 ;\
+            \});\
+        \}\
+    \}\
+\}\
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 applyCircleMaskToView\cf6 :(\cf10 UIVisualEffectView\cf6  *)view \{\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (!view) 
+\f1\b \cf8 return
+\f0\b0 \cf6 ;\
+    \cf10 CAShapeLayer\cf6  *mask = [\cf10 CAShapeLayer\cf6  \cf13 layer\cf6 ];\
+    view.\cf13 layer\cf6 .\cf13 mask\cf6  = mask;\
+    [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 updateCircleMaskFrameForView\cf6 :view];\
+\}\
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 updateCircleMaskFrameForView\cf6 :(\cf10 UIVisualEffectView\cf6  *)view \{\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (!view) 
+\f1\b \cf8 return
+\f0\b0 \cf6 ;\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  ([view.\cf13 layer\cf6 .\cf13 mask\cf6  \cf13 isKindOfClass\cf6 :[\cf10 CAShapeLayer\cf6  \cf13 class\cf6 ]]) \{\
+        
+\f1\b \cf8 if
+\f0\b0 \cf6  ([\cf10 NSThread\cf6  \cf13 isMainThread\cf6 ]) \{\
+            \cf10 CAShapeLayer\cf6  *mask = (\cf10 CAShapeLayer\cf6  *)view.\cf13 layer\cf6 .\cf13 mask\cf6 ;\
+            mask.\cf13 path\cf6  = [\cf10 UIBezierPath\cf6  \cf13 bezierPathWithOvalInRect\cf6 :view.\cf13 bounds\cf6 ].\cf13 CGPath\cf6 ;\
+            mask.\cf13 frame\cf6  = view.\cf13 bounds\cf6 ;\
+        \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  \{\
+            \cf13 dispatch_async\cf6 (\cf13 dispatch_get_main_queue\cf6 (), ^\{\
+                \cf10 CAShapeLayer\cf6  *mask = (\cf10 CAShapeLayer\cf6  *)view.\cf13 layer\cf6 .\cf13 mask\cf6 ;\
+                
+\f1\b \cf8 if
+\f0\b0 \cf6  (mask) \{\
+                    mask.\cf13 path\cf6  = [\cf10 UIBezierPath\cf6  \cf13 bezierPathWithOvalInRect\cf6 :view.\cf13 bounds\cf6 ].\cf13 CGPath\cf6 ;\
+                    mask.\cf13 frame\cf6  = view.\cf13 bounds\cf6 ;\
+                \}\
+            \});\
+        \}\
+    \}\
+\}\
+\
+\cf2 #pragma mark 
+\f1\b \cf7 - Loading View Helper
+\f0\b0 \cf6 \
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 removeLoadingViewIfNeeded\cf6  \{\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  ([\cf10 NSThread\cf6  \cf13 isMainThread\cf6 ]) \{\
+        [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 performLoadingViewRemoval\cf6 ];\
+    \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  \{\
+        \cf13 dispatch_async\cf6 (\cf13 dispatch_get_main_queue\cf6 (), ^\{\
+            [
+\f1\b \cf8 self
+\f0\b0 \cf6  \cf14 performLoadingViewRemoval\cf6 ];\
+        \});\
+    \}\
+\}\
+\
+- (
+\f1\b \cf8 void
+\f0\b0 \cf6 )\cf11 performLoadingViewRemoval\cf6  \{\
+    
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 loadingView\cf6  && 
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 loadingView\cf6 .\cf13 superview\cf6 ) \{\
+        \cf13 NSLog\cf6 (\cf4 @"Removing loadingView."\cf6 );\
+        [\cf10 UIView\cf6  \cf13 animateWithDuration\cf6 :\cf15 0.3\cf6  \cf13 animations\cf6 :^\{\
+            
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 loadingView\cf6 .\cf13 alpha\cf6  = \cf15 0.0\cf6 ;\
+        \} \cf13 completion\cf6 :^(
+\f1\b \cf8 BOOL
+\f0\b0 \cf6  finished) \{\
+            [
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 loadingView\cf6  \cf13 removeFromSuperview\cf6 ];\
+            
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 loadingView\cf6  = 
+\f1\b \cf8 nil
+\f0\b0 \cf6 ;\
+        \}];\
+    \} 
+\f1\b \cf8 else
+\f0\b0 \cf6  
+\f1\b \cf8 if
+\f0\b0 \cf6  (
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 loadingView\cf6 ) \{\
+        \cf13 NSLog\cf6 (\cf4 @"performLoadingViewRemoval: loadingView exists but has no superview?"\cf6 );\
+        
+\f1\b \cf8 self
+\f0\b0 \cf6 .\cf14 loadingView\cf6  = 
+\f1\b \cf8 nil
+\f0\b0 \cf6 ;\
+    \}\
+\}\
+\
+
+\f1\b \cf8 @end
+\f0\b0 \cf6 \
+}
