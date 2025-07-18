@@ -1,0 +1,147 @@
+//
+//  ContentView.swift
+//  0101
+//
+//  Created by Jarno Roeder on 16.07.25.
+//
+
+import SwiftUI
+import CoreMotion
+//GEN
+var width1 = 11.0
+var rt = rtm
+var speed = 1
+//PULSE
+var TopSpacerP = 100.0
+var HeightP = 300.0
+var BottomSpacerP = 100.0
+//LEFT
+var TopSpacerL = 100.0
+var HeightL = 300.0
+var BottomSpacerL = 100.0
+//MIDDLE
+var TopSpacerM = 100.0
+var HeightM = 300.0
+var BottomSpacerM = 100.0
+//RIGHT
+var TopSpacerR = 100.0
+var HeightR = 300.0
+var BottomSpacerR = 100.0
+//FUNC&STRUCT
+struct ContentView: View {
+  @State private var speed: Double = 1.0
+  let speedzero: Double = 1.0
+  @State private var speedster: CGSize = .zero
+  
+  var drag: some Gesture {
+    DragGesture()
+      .onChanged{ _ in speed = 1.0 + Double(value.translat) }
+      .onEnded{ _ in speed = speedzero }
+  }
+  
+  var body: some View {
+    ZStack {
+      ZStack {
+        Rectangle()
+          .ignoresSafeArea()
+          .foregroundStyle(Color(.systemGray2))
+          .blur(radius: 1.0)
+        //.opacity(1)
+        Rectangle()
+          .ignoresSafeArea()
+          .foregroundStyle(Color(.systemBlue))
+          .blur(radius: 200.0)
+          .opacity(0.9)
+        Rectangle()
+          .ignoresSafeArea()
+          .foregroundStyle(Color(.systemGray6))
+          .blur(radius: 100.0, opaque: false)
+          .opacity(0.6)
+        VStack {
+          Text("speed: \(speed)")
+          
+          RoundedRectangle(cornerRadius: 200)
+            .foregroundStyle(Color(.clear))
+            .blur(radius:100, opaque: false)
+            .opacity(0.3)
+        }
+        Rectangle()
+          .Color(.clear)
+          .frame(width: 200, height: 100)
+          .gesture(DragGesture()
+            .onChanged { _ in speed = speedzero + Double(value.translation.width / 50)
+            }
+            .onEnded { _ in startSpeed = speed
+            }
+        
+        HStack{
+          Spacer()
+            .frame(width: 20)
+          ZStack{
+            Capsule()
+              .frame(width: width1+2,
+                     height: HeightP)
+              .foregroundStyle(Color(.systemGray2))
+              .opacity(10.0)
+            Text("S")
+            VStack {
+              Spacer()
+                .frame(height: TopSpacerL)
+              Capsule()
+                .frame(width: width1,
+                       height: HeightL)
+                .foregroundStyle(Color(.darkGray))
+              Text("L")
+              Spacer()
+                .frame(height: BottomSpacerL)
+            }
+          }
+          Spacer()
+            .frame(width: 20)
+          VStack {
+            Spacer()
+              .frame(height: TopSpacerM)
+            Capsule()
+              .frame(width: width1,
+                     height: HeightM)
+              .foregroundStyle(Color(.darkGray))
+            Text("M")
+            Spacer()
+              .frame(height: BottomSpacerM)
+          }
+          Spacer()
+            .frame(width: 30)
+          VStack {
+            Spacer()
+              .frame(height: TopSpacerR)
+            Capsule()
+              .frame(width: width1,
+                     height: HeightR)
+              .foregroundStyle(Color(.darkGray))
+            Text("R")
+            Spacer()
+              .frame(height: BottomSpacerR)
+          }
+          Spacer()
+            .frame(width: 50)
+          Text("t: \(rtm)")
+            .font(.system(size: 10))
+            .fontWeight(.bold)
+          Text("y: \(rtm)")
+            .font(.system(size: 10))
+            .fontWeight(.bold)
+          Text("x: \(rtm)")
+            .font(.system(size: 10))
+            .fontWeight(.bold)
+          Text("z: \(rtm)")
+            .font(.system(size: 10))
+            .fontWeight(.bold)
+          Spacer()
+        }
+      }
+    }
+  }
+}
+#Preview {
+  ContentView()
+}
